@@ -317,9 +317,9 @@ allocateHook(
 	*(void**)(hook->m_thunkCode + ThunkCodeOffset_HookPtr2) = hook;
 	*(void**)(hook->m_thunkCode + ThunkCodeOffset_TargetFuncPtr) = targetFunc;
 	*(void**)(hook->m_thunkCode + ThunkCodeOffset_HookRetPtr) = hook->m_thunkCode + ThunkCodeOffset_HookRet;
-	*(void**)(hook->m_thunkCode + ThunkCodeOffset_HookEnterFuncPtr) = hookEnter;
-	*(void**)(hook->m_thunkCode + ThunkCodeOffset_HookLeaveFuncPtr) = hookLeave;
-	*(void**)(hook->m_thunkCode + ThunkCodeOffset_HookExceptionFuncPtr) = hookException;
+	*(void**)(hook->m_thunkCode + ThunkCodeOffset_HookEnterFuncPtr) = (void*)hookEnter;
+	*(void**)(hook->m_thunkCode + ThunkCodeOffset_HookLeaveFuncPtr) = (void*)hookLeave;
+	*(void**)(hook->m_thunkCode + ThunkCodeOffset_HookExceptionFuncPtr) = (void*)hookException;
 
 	hook->m_runtimeFunction.BeginAddress = 0;
 	hook->m_runtimeFunction.EndAddress = sizeof(g_thunkCode);

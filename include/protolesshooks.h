@@ -6,9 +6,20 @@
 
 namespace plh {
 
-struct Hook;
-
 //..............................................................................
+
+enum FrameOffset
+{
+	FrameOffset_RegArg   = -16,
+
+#if (WIN32)
+	FrameOffset_StackArg = 16 + 8 * 4,
+#else
+	FrameOffset_StackArg = 16,
+#endif
+};
+
+// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 typedef
 void
@@ -39,11 +50,17 @@ HookExceptionFunc(
 	CONTEXT* context
 	);
 
+#else
+
+typedef
+void
+HookExceptionFunc(); // unused on POSIX
+
 #endif
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-#if (WIN32)
+struct Hook;
 
 Hook*
 allocateHook(
@@ -53,18 +70,6 @@ allocateHook(
 	HookLeaveFunc* leaveFunc,
 	HookExceptionFunc* exceptionFunc
 	);
-
-#else
-
-Hook*
-allocateHook(
-	void* targetFunc,
-	void* callbackParam,
-	HookEnterFunc* enterFunc,
-	HookLeaveFunc* leaveFunc
-	);
-
-#endif
 
 void
 freeHook(Hook* hook);

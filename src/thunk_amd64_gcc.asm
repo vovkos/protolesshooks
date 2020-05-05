@@ -2,9 +2,10 @@ section .text
 
 	; padding + 6 gp regs + 8 xmm regs
 
-	STACK_FRAME_SIZE equ 16 + 6 * 8 + 8 * 16 
+	STACK_FRAME_SIZE equ 16 + 6 * 8 + 8 * 16
 
 	extern targetFunc
+	extern hook
 	extern hookEnterFunc
 	extern hookLeaveFunc
 	extern hookRet
@@ -36,7 +37,7 @@ thunk_entry:
 
 	; call the hook-enter function
 
-	mov     rdi, targetFunc
+	mov     rdi, hook
 	mov     rsi, rbp
 	mov     rdx, [rbp + 8]
 	mov     rax, hookEnterFunc
@@ -91,7 +92,7 @@ hook_ret:
 
 	; call the hook-leave function
 
-	mov     rdi, targetFunc
+	mov     rdi, hook
 	mov     rsi, rbp
 	mov     rdx, rax
 	mov     rax, hookLeaveFunc
