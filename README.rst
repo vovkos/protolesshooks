@@ -39,9 +39,7 @@ On Windows x64 thunks properly dispatch exceptions to lower SEH handlers, withou
 	void foo()
 	{
 		// recoverable exception happens here...
-
 		...
-
 		// now unrecoverable exception happens here...
 	}
 
@@ -49,10 +47,9 @@ On Windows x64 thunks properly dispatch exceptions to lower SEH handlers, withou
 	{
 		if (/* can recover? */)
 		{
-			// recover, e.g. commit/protect page, etc.
+			// recover, e.g. commit/protect the faulting page
 			return EXCEPTION_CONTINUE_EXECUTION;
 		}
-
 		return EXCEPTION_EXECUTE_HANDLER;
 	}
 
@@ -62,7 +59,7 @@ On Windows x64 thunks properly dispatch exceptions to lower SEH handlers, withou
 		{
 			foo();
 		}
-		__except(barFilter(GetExceptionInformation()))
+		__except (barFilter(GetExceptionInformation()))
 		{
 			// unrecoverable exception is caught here
 		}

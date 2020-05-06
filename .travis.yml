@@ -1,0 +1,36 @@
+dist: xenial
+sudo: required
+language: cpp
+
+os:
+    - linux
+    - osx
+
+compiler:
+    - gcc
+    - clang
+
+env:
+    matrix:
+        - TARGET_CPU=x86 CONFIGURATION=Debug
+        - TARGET_CPU=x86 CONFIGURATION=Release
+        - TARGET_CPU=amd64 CONFIGURATION=Debug
+        - TARGET_CPU=amd64 CONFIGURATION=Release
+
+matrix:
+    exclude:
+        - os:       osx
+          compiler: gcc
+
+        - os:  osx
+          env: TARGET_CPU=x86 CONFIGURATION=Debug
+
+        - os:  osx
+          env: TARGET_CPU=x86 CONFIGURATION=Release
+
+script:
+    - mkdir build
+    - cd build
+    - cmake .. -DTARGET_CPU=$TARGET_CPU -DCMAKE_BUILD_TYPE=$CONFIGURATION
+    - make
+    - ctest --output-on-failure
