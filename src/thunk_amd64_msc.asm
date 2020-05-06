@@ -1,8 +1,8 @@
 section .text
 
-	; padding + 4 gp regs + 4 xmm regs + 4 gp arg home
+	; 4 gp regs + 4 xmm regs + 4 gp arg home
 
-	STACK_FRAME_SIZE equ 16 + 4 * 8 + 4 * 16 + 4 * 8
+	STACK_FRAME_SIZE equ 4 * 8 + 4 * 16 + 4 * 8
 
 	extern targetFunc
 	extern hook
@@ -21,14 +21,14 @@ thunk_entry:
 
 	; save all arg registers (xmm must be 16-byte aligned)
 
-	mov     [rbp - 16 - 8 * 0], rcx
-	mov     [rbp - 16 - 8 * 1], rdx
-	mov     [rbp - 16 - 8 * 2], r8
-	mov     [rbp - 16 - 8 * 3], r9
-	movdqa  [rbp - 16 - 8 * 4 - 16 * 0], xmm0
-	movdqa  [rbp - 16 - 8 * 4 - 16 * 1], xmm1
-	movdqa  [rbp - 16 - 8 * 4 - 16 * 2], xmm2
-	movdqa  [rbp - 16 - 8 * 4 - 16 * 3], xmm3
+	movdqa  [rbp - 16 * 1], xmm3
+	movdqa  [rbp - 16 * 2], xmm2
+	movdqa  [rbp - 16 * 3], xmm1
+	movdqa  [rbp - 16 * 4], xmm0
+	mov     [rbp - 16 * 4 - 8 * 1], r9
+	mov     [rbp - 16 * 4 - 8 * 2], r8
+	mov     [rbp - 16 * 4 - 8 * 3], rdx
+	mov     [rbp - 16 * 4 - 8 * 4], rcx
 
 	; call the hook-enter function
 
@@ -40,14 +40,14 @@ thunk_entry:
 
 	; restore all arg registers
 
-	mov     rcx,  [rbp - 16 - 8 * 0]
-	mov     rdx,  [rbp - 16 - 8 * 1]
-	mov     r8,   [rbp - 16 - 8 * 2]
-	mov     r9,   [rbp - 16 - 8 * 3]
-	movdqa  xmm0, [rbp - 16 - 8 * 4 - 16 * 0]
-	movdqa  xmm1, [rbp - 16 - 8 * 4 - 16 * 1]
-	movdqa  xmm2, [rbp - 16 - 8 * 4 - 16 * 2]
-	movdqa  xmm3, [rbp - 16 - 8 * 4 - 16 * 3]
+	movdqa  xmm3, [rbp - 16 * 1]
+	movdqa  xmm2, [rbp - 16 * 2]
+	movdqa  xmm1, [rbp - 16 * 3]
+	movdqa  xmm0, [rbp - 16 * 4]
+	mov     r9,   [rbp - 16 * 4 - 8 * 1]
+	mov     r8,   [rbp - 16 * 4 - 8 * 2]
+	mov     rdx,  [rbp - 16 * 4 - 8 * 3]
+	mov     rcx,  [rbp - 16 * 4 - 8 * 4]
 
 	; undo prologue
 

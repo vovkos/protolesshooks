@@ -1,8 +1,8 @@
 section .text
 
-	; padding + 6 gp regs + 8 xmm regs
+	; 6 gp regs + 8 xmm regs
 
-	STACK_FRAME_SIZE equ 16 + 6 * 8 + 8 * 16
+	STACK_FRAME_SIZE equ 6 * 8 + 8 * 16
 
 	extern targetFunc
 	extern hook
@@ -20,20 +20,20 @@ thunk_entry:
 
 	; save all arg registers (xmm must be 16-byte aligned)
 
-	mov     [rbp - 16 - 8 * 0], rdi
-	mov     [rbp - 16 - 8 * 1], rsi
-	mov     [rbp - 16 - 8 * 2], rdx
-	mov     [rbp - 16 - 8 * 3], rcx
-	mov     [rbp - 16 - 8 * 4], r8
-	mov     [rbp - 16 - 8 * 5], r9
-	movdqa  [rbp - 16 - 8 * 6 - 16 * 0], xmm0
-	movdqa  [rbp - 16 - 8 * 6 - 16 * 1], xmm1
-	movdqa  [rbp - 16 - 8 * 6 - 16 * 2], xmm2
-	movdqa  [rbp - 16 - 8 * 6 - 16 * 3], xmm3
-	movdqa  [rbp - 16 - 8 * 6 - 16 * 4], xmm4
-	movdqa  [rbp - 16 - 8 * 6 - 16 * 5], xmm5
-	movdqa  [rbp - 16 - 8 * 6 - 16 * 6], xmm6
-	movdqa  [rbp - 16 - 8 * 6 - 16 * 7], xmm7
+	movdqa  [rbp - 16 * 1], xmm7
+	movdqa  [rbp - 16 * 2], xmm6
+	movdqa  [rbp - 16 * 3], xmm5
+	movdqa  [rbp - 16 * 4], xmm4
+	movdqa  [rbp - 16 * 5], xmm3
+	movdqa  [rbp - 16 * 6], xmm2
+	movdqa  [rbp - 16 * 7], xmm1
+	movdqa  [rbp - 16 * 8], xmm0
+	mov     [rbp - 16 * 8 - 8 * 1], r9
+	mov     [rbp - 16 * 8 - 8 * 2], r8
+	mov     [rbp - 16 * 8 - 8 * 3], rcx
+	mov     [rbp - 16 * 8 - 8 * 4], rdx
+	mov     [rbp - 16 * 8 - 8 * 5], rsi
+	mov     [rbp - 16 * 8 - 8 * 6], rdi
 
 	; call the hook-enter function
 
@@ -45,20 +45,20 @@ thunk_entry:
 
 	; restore all arg registers
 
-	mov     rdi,  [rbp - 16 - 8 * 0]
-	mov     rsi,  [rbp - 16 - 8 * 1]
-	mov     rdx,  [rbp - 16 - 8 * 2]
-	mov     rcx,  [rbp - 16 - 8 * 3]
-	mov     r8,   [rbp - 16 - 8 * 4]
-	mov     r9,   [rbp - 16 - 8 * 5]
-	movdqa  xmm0, [rbp - 16 - 8 * 6 - 16 * 0]
-	movdqa  xmm1, [rbp - 16 - 8 * 6 - 16 * 1]
-	movdqa  xmm2, [rbp - 16 - 8 * 6 - 16 * 2]
-	movdqa  xmm3, [rbp - 16 - 8 * 6 - 16 * 3]
-	movdqa  xmm4, [rbp - 16 - 8 * 6 - 16 * 4]
-	movdqa  xmm5, [rbp - 16 - 8 * 6 - 16 * 5]
-	movdqa  xmm6, [rbp - 16 - 8 * 6 - 16 * 6]
-	movdqa  xmm7, [rbp - 16 - 8 * 6 - 16 * 7]
+	movdqa  xmm0, [rbp - 16 * 1]
+	movdqa  xmm1, [rbp - 16 * 2]
+	movdqa  xmm2, [rbp - 16 * 3]
+	movdqa  xmm3, [rbp - 16 * 4]
+	movdqa  xmm4, [rbp - 16 * 5]
+	movdqa  xmm5, [rbp - 16 * 6]
+	movdqa  xmm6, [rbp - 16 * 7]
+	movdqa  xmm7, [rbp - 16 * 8]
+	mov     r9,   [rbp - 16 * 8 - 8 * 1]
+	mov     r8,   [rbp - 16 * 8 - 8 * 2]
+	mov     rcx,  [rbp - 16 * 8 - 8 * 3]
+	mov     rdx,  [rbp - 16 * 8 - 8 * 4]
+	mov     rsi,  [rbp - 16 * 8 - 8 * 5]
+	mov     rdi,  [rbp - 16 * 8 - 8 * 6]
 
 	; undo prologue
 

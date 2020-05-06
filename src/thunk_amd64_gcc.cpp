@@ -84,14 +84,14 @@ uint8_t g_thunkCode[] =
 
 enum ThunkCodeOffset
 {
-	ThunkCodeOffset_HookPtr1             = 0x0056,
-	ThunkCodeOffset_HookEnterFuncPtr     = 0x0067,
-	ThunkCodeOffset_HookRetPtr           = 0x00c4,
-	ThunkCodeOffset_TargetFuncPtr        = 0x00d2,
-	ThunkCodeOffset_HookRet              = 0x00dc,
-	ThunkCodeOffset_HookPtr2             = 0x00f1,
-	ThunkCodeOffset_HookLeaveFuncPtr     = 0x0101,
-	ThunkCodeOffset_End                  = sizeof(g_thunkCode),
+	ThunkCodeOffset_HookPtr1         = 0x0056,
+	ThunkCodeOffset_HookEnterFuncPtr = 0x0067,
+	ThunkCodeOffset_HookRetPtr       = 0x00c4,
+	ThunkCodeOffset_TargetFuncPtr    = 0x00d2,
+	ThunkCodeOffset_HookRet          = 0x00dc,
+	ThunkCodeOffset_HookPtr2         = 0x00f1,
+	ThunkCodeOffset_HookLeaveFuncPtr = 0x0101,
+	ThunkCodeOffset_End              = sizeof(g_thunkCode),
 };
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .

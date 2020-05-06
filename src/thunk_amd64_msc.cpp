@@ -1,5 +1,4 @@
 ﻿#include <stdint.h>
-#include <stdio.h>
 #include <windows.h>
 #include <assert.h>
 
