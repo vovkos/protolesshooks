@@ -1,142 +1,46 @@
 ﻿#include <stdint.h>
-#if (WIN32)
-#	include <windows.h>
-#else
-#endif
+
+//..............................................................................
+
+// nasm -fwin32 -lthunk_x86.asm.lst thunk_x86.asm
+// perl nasm-list-to-cpp.pl thunk_x86.asm.lst
+
+uint8_t g_thunkCode[] =
+{
+	0x55,                          // 00000000  push    ebp
+	0x89, 0xE5,                    // 00000001  mov     ebp, esp
+	0x83, 0xEC, 0x0C,              // 00000003  sub     esp, STACK_FRAME_SIZE
+	0x68, 0x00, 0x00, 0x00, 0x00,  // 00000006  push    targetFunc
+	0x55,                          // 0000000B  push    ebp
+	0xFF, 0x75, 0x04,              // 0000000C  push    dword [ebp + 4]
+	0xB8, 0x00, 0x00, 0x00, 0x00,  // 0000000F  mov     eax, hookEnterFunc
+	0xFF, 0xD0,                    // 00000014  call    eax
+	0x83, 0xC4, 0x0C,              // 00000016  add     esp, STACK_FRAME_SIZE
+	0x5D,                          // 00000019  pop     ebp
+	0xB8, 0x00, 0x00, 0x00, 0x00,  // 0000001A  mov     eax, hookRet
+	0x89, 0x04, 0x24,              // 0000001F  mov     [esp], eax
+	0xB8, 0x00, 0x00, 0x00, 0x00,  // 00000022  mov     eax, targetFunc
+	0xFF, 0xE0,                    // 00000027  jmp     eax
+	0x83, 0xEC, 0x04,              // 00000029  sub     esp, 4  ; <<< hook_ret
+	0x55,                          // 0000002C  push    ebp
+	0x89, 0xE5,                    // 0000002D  mov     ebp, esp
+	0x83, 0xEC, 0x0C,              // 0000002F  sub     esp, STACK_FRAME_SIZE
+	0x89, 0x45, 0xFC,              // 00000032  mov     [ebp - 4], eax
+	0x68, 0x00, 0x00, 0x00, 0x00,  // 00000035  push    targetFunc
+	0x55,                          // 0000003A  push    ebp
+	0x50,                          // 0000003B  push    eax
+	0xB8, 0x00, 0x00, 0x00, 0x00,  // 0000003C  mov     eax, hookLeaveFunc
+	0xFF, 0xD0,                    // 00000041  call    eax
+	0x89, 0x45, 0x04,              // 00000043  mov     [ebp + 4], eax
+	0x8B, 0x45, 0xFC,              // 00000046  mov     eax, [ebp - 4]
+	0x83, 0xC4, 0x0C,              // 00000049  add     esp, STACK_FRAME_SIZE
+	0x5D,                          // 0000004C  pop     ebp
+	0xC3,                          // 0000004D  ret
+};
 
 //..............................................................................
 
 #if (WIN32)
-
-#pragma pack(push, 1)
-
-union ThunkCode
-{
-	enum
-	{
-		StackFrameSize = 8 + 4 * 8 + 4 * 16, // padding + 4 gp regs + 4 xmm regs
-	};
-
-	uint8_t m_code[0x103];
-
-	struct
-	{
-		uint8_t m_offset1[0x31];
-		uint64_t m_targetFunc1;
-	};
-
-	struct
-	{
-		uint8_t m_offset2[0x42];
-		uint64_t m_hookEnterFunc;
-	};
-
-	struct
-	{
-		uint8_t m_offset3[0x7a];
-		uint64_t m_hookRet;
-	};
-
-	struct
-	{
-		uint8_t m_offset4[0x88];
-		uint64_t m_targetFunc2;
-	};
-
-	uint8_t m_hookRetOffset[0x92];
-
-	struct
-	{
-		uint8_t m_offset5[0xa7];
-		uint64_t m_targetFunc3;
-	};
-
-	struct
-	{
-		uint8_t m_offset6[0xb7];
-		uint64_t m_hookLeaveFunc;
-	};
-
-	uint8_t m_hookSehHandlerOffset[0xd2];
-
-	struct
-	{
-		uint8_t m_offset7[0xe3];
-		uint64_t m_hookExceptionFunc;
-	};
-};
-
-// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-
-// nasm -f win64 -l thunk_win_amd64.asm.lst thunk_win_amd64.asm
-
-ThunkCode g_thunkCodeTemplate =
-{{
-	0x55,                                            // 00000000  push    rbp
-	0x48, 0x89, 0xE5,                                // 00000001  mov     rbp, rsp
-	0x48, 0x81, 0xEC, 0x88, 0x00, 0x00, 0x00,        // 00000004  sub     rsp, STACK_FRAME_SIZE
-	0x48, 0x89, 0x4D, 0xF0,                          // 0000000B  mov     [rbp - 16 - 8 * 0], rcx
-	0x48, 0x89, 0x55, 0xE8,                          // 0000000F  mov     [rbp - 16 - 8 * 1], rdx
-	0x4C, 0x89, 0x45, 0xE0,                          // 00000013  mov     [rbp - 16 - 8 * 2], r8
-	0x4C, 0x89, 0x4D, 0xD8,                          // 00000017  mov     [rbp - 16 - 8 * 3], r9
-	0x66, 0x0F, 0x7F, 0x45, 0xD0,                    // 0000001B  movdqa  [rbp - 16 - 8 * 4 - 16 * 0], xmm0
-	0x66, 0x0F, 0x7F, 0x4D, 0xC0,                    // 00000020  movdqa  [rbp - 16 - 8 * 4 - 16 * 1], xmm1
-	0x66, 0x0F, 0x7F, 0x55, 0xB0,                    // 00000025  movdqa  [rbp - 16 - 8 * 4 - 16 * 2], xmm2
-	0x66, 0x0F, 0x7F, 0x5D, 0xA0,                    // 0000002A  movdqa  [rbp - 16 - 8 * 4 - 16 * 3], xmm3
-	0x48, 0xB9,                                      // 0000002F  mov     rcx, targetFunc
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // 00000031
-	0x48, 0x89, 0xEA,                                // 00000039  mov     rdx, rbp
-	0x4C, 0x8B, 0x45, 0x08,                          // 0000003C  mov     r8, [rbp + 8]
-	0x48, 0xB8,                                      // 00000040  mov     rax, hookEnterFunc
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // 00000042
-	0xFF, 0xD0,                                      // 0000004A  call    rax
-	0x48, 0x8B, 0x4D, 0xF0,                          // 0000004C  mov     rcx,  [rbp - 16 - 8 * 0]
-	0x48, 0x8B, 0x55, 0xE8,                          // 00000050  mov     rdx,  [rbp - 16 - 8 * 1]
-	0x4C, 0x8B, 0x45, 0xE0,                          // 00000054  mov     r8,   [rbp - 16 - 8 * 2]
-	0x4C, 0x8B, 0x4D, 0xD8,                          // 00000058  mov     r9,   [rbp - 16 - 8 * 3]
-	0x66, 0x0F, 0x6F, 0x45, 0xD0,                    // 0000005C  movdqa  xmm0, [rbp - 16 - 8 * 4 - 16 * 0]
-	0x66, 0x0F, 0x6F, 0x4D, 0xC0,                    // 00000061  movdqa  xmm1, [rbp - 16 - 8 * 4 - 16 * 1]
-	0x66, 0x0F, 0x6F, 0x55, 0xB0,                    // 00000066  movdqa  xmm2, [rbp - 16 - 8 * 4 - 16 * 2]
-	0x66, 0x0F, 0x6F, 0x5D, 0xA0,                    // 0000006B  movdqa  xmm3, [rbp - 16 - 8 * 4 - 16 * 3]
-	0x48, 0x81, 0xC4, 0x88, 0x00, 0x00, 0x00,        // 00000070  add     rsp, STACK_FRAME_SIZE
-	0x5D,                                            // 00000077  pop     rbp
-	0x48, 0xB8,                                      // 00000078  mov     rax, hookRet
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // 0000007A
-	0x48, 0x89, 0x04, 0x24,                          // 00000082  mov     [rsp], rax
-	0x48, 0xB8,                                      // 00000086  mov     rax, targetFunc
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // 00000088
-	0xFF, 0xE0,                                      // 00000090  jmp     rax
-	0x48, 0x83, 0xEC, 0x08,                          // 00000092  sub     rsp, 8  ; <<< hook_ret
-	0x55,                                            // 00000096  push    rbp
-	0x48, 0x89, 0xE5,                                // 00000097  mov     rbp, rsp
-	0x48, 0x81, 0xEC, 0x88, 0x00, 0x00, 0x00,        // 0000009A  sub     rsp, STACK_FRAME_SIZE
-	0x48, 0x89, 0x45, 0xF8,                          // 000000A1  mov     [rbp - 8], rax
-	0x48, 0xB9,                                      // 000000A5  mov     rcx, targetFunc
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // 000000A7
-	0x48, 0x89, 0xEA,                                // 000000AF  mov     rdx, rbp
-	0x49, 0x89, 0xC0,                                // 000000B2  mov     r8, rax
-	0x48, 0xB8,                                      // 000000B5  mov     rax, hookLeaveFunc
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // 000000B7
-	0xFF, 0xD0,                                      // 000000BF  call    rax
-	0x48, 0x89, 0x45, 0x08,                          // 000000C1  mov     [rbp + 8], rax
-	0x48, 0x8B, 0x45, 0xF8,                          // 000000C5  mov     rax, [rbp - 8]
-	0x48, 0x81, 0xC4, 0x88, 0x00, 0x00, 0x00,        // 000000C9  add     rsp, STACK_FRAME_SIZE
-	0x5D,                                            // 000000D0  pop     rbp
-	0xC3,                                            // 000000D1  ret
-	0x55,                                            // 000000D2  push    rbp  ; <<< seh_handler
-	0x48, 0x89, 0xE5,                                // 000000D3  mov     rbp, rsp
-	0x48, 0x81, 0xEC, 0x88, 0x00, 0x00, 0x00,        // 000000D6  sub     rsp, STACK_FRAME_SIZE
-	0x48, 0x89, 0x55, 0xF8,                          // 000000DD  mov     [rbp - 8], rdx
-	0x48, 0xB8,                                      // 000000E1  mov     rax, hookExceptionFunc
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // 000000E3
-	0xFF, 0xD0,                                      // 000000EB  call    rax
-	0x48, 0x8B, 0x55, 0xF8,                          // 000000ED  mov     rdx,  [rbp - 8]
-	0x48, 0x89, 0x42, 0xF8,                          // 000000F1  mov     [rdx - 16 + 8], rax
-	0xB8, 0x00, 0x00, 0x00, 0x00,                    // 000000F5  mov     rax, 0
-	0x48, 0x81, 0xC4, 0x88, 0x00, 0x00, 0x00,        // 000000FA  add     rsp, STACK_FRAME_SIZE
-	0x5D,                                            // 00000101  pop     rbp
-	0xC3,                                            // 00000102  ret
-}};
 
 #pragma pack(pop)
 

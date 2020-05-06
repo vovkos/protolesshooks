@@ -1,17 +1,18 @@
 section .text
 
-	; padding + 1 dword
+	; 1 dword + padding
 
 	STACK_FRAME_SIZE equ 4 + 4
 
 	extern targetFunc
+	extern hook
 	extern hookEnterFunc
 	extern hookLeaveFunc
 	extern hookRet
 
 thunk_entry:
 
-	; standard prologue
+	; standard prologue (leaves ebp 8-byte aligned, esp 16-byte aligned)
 
 	push    ebp
 	mov     ebp, esp
@@ -19,11 +20,14 @@ thunk_entry:
 
 	; call the hook-enter function
 
-	push    targetFunc
-	push    ebp
-	push    dword [ebp + 4]
+	sub     esp, 16
+	mov     dword [esp + 0], hook
+	mov     [esp + 4], ebp
+	mov     eax, [ebp + 4]
+	mov     [esp + 8], eax
 	mov     eax, hookEnterFunc
 	call    eax
+	add     esp, 16
 
 	; undo prologue
 
@@ -55,11 +59,13 @@ thunk_entry:
 
 	; call the hook-leave function
 
-	push    targetFunc
-	push    ebp
-	push    eax
+	sub     esp, 16
+	mov     dword [esp + 0], hook
+	mov     [esp + 4], ebp
+	mov     [esp + 8], eax
 	mov     eax, hookLeaveFunc
 	call    eax
+	add     esp, 16
 
 	; eax now holds the original return pointer
 
