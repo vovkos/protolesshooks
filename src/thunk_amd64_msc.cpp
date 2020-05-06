@@ -1,5 +1,6 @@
 ﻿#include <stdint.h>
 #include <windows.h>
+#include <winnt.h>
 #include <assert.h>
 
 #include "protolesshooks.h"

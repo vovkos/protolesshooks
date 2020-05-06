@@ -1,7 +1,5 @@
 @echo off
 
-::..............................................................................
-
 :loop
 
 if "%1" == "" goto :finalize
@@ -19,8 +17,6 @@ echo Invalid argument: '%1'
 exit -1
 
 :: . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-
-:: Toolchain
 
 :msvc10
 set TOOLCHAIN=msvc10
@@ -47,8 +43,6 @@ shift
 goto :loop
 
 :: . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-
-:: Platform
 
 :x86
 set TARGET_CPU=x86
@@ -78,5 +72,3 @@ set CMAKE_BUILD_FLAGS= ^
 	/nologo ^
 	/verbosity:minimal ^
 	/consoleloggerparameters:Summary
-
-::..............................................................................

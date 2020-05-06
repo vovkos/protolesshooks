@@ -28,6 +28,9 @@ matrix:
         - os:  osx
           env: TARGET_CPU=x86 CONFIGURATION=Release
 
+install:
+    - bash ci/travis/install.sh
+
 script:
     - mkdir build
     - cd build
