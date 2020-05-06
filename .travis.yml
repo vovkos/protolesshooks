@@ -31,6 +31,6 @@ matrix:
 script:
     - mkdir build
     - cd build
-    - cmake .. -DTARGET_CPU=$TARGET_CPU -DCMAKE_BUILD_TYPE=$CONFIGURATION
+    - cmake .. -DTARGET_CPU=$TARGET_CPU -DCMAKE_BUILD_TYPE=$CONFIGURATION -DCMAKE_CXX_FLAGS=-std=c++11
     - make
     - ctest --output-on-failure

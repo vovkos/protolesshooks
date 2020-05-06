@@ -75,7 +75,7 @@ struct Hook
 
 //..............................................................................
 
-thread_local uint32_t g_originalRet = 0;
+__declspec(thread) uint32_t g_originalRet = 0;
 
 void
 hookEnter(

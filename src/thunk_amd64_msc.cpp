@@ -231,7 +231,7 @@ dispatchException(
 
 //..............................................................................
 
-thread_local uint64_t g_originalRet;
+__declspec(thread) uint64_t g_originalRet;
 
 void
 hookEnter(

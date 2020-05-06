@@ -89,10 +89,10 @@ enum FrameOffset
 	FrameOffset_StackArgBlock = 8,
 #elif (_PLH_CPU_AMD64)
 #	if (_PLH_CPP_MSC)
-	FrameOffset_RegArgBlock   = -sizeof(RegArgBlock),
+	FrameOffset_RegArgBlock   = -(int)sizeof(RegArgBlock),
 	FrameOffset_StackArgBlock = 16 + 8 * 4,
 #	elif (_PLH_CPP_GCC)
-	FrameOffset_RegArgBlock   = -sizeof(RegArgBlock),
+	FrameOffset_RegArgBlock   = -(int)sizeof(RegArgBlock),
 	FrameOffset_StackArgBlock = 16,
 #	endif
 #endif
