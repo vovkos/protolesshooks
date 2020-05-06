@@ -1,4 +1,4 @@
-﻿#if (WIN32)
+﻿#if (_WIN32)
 #	include <windows.h>
 #endif
 #include <stdio.h>
@@ -15,7 +15,7 @@ onHookEnter(
 	size_t frameBase
 	)
 {
-	printf("onHookEnter(%p, %s, %llx)\n", targetFunc, (char*)callbackParam, frameBase);
+	printf("onHookEnter(%p, '%s', %zx)\n", targetFunc, (char*)callbackParam, frameBase);
 }
 
 void
@@ -26,7 +26,7 @@ onHookLeave(
 	size_t returnValue
 	)
 {
-	printf("onHookLeave(%p, %s, %llx)\n", targetFunc, (char*)callbackParam, frameBase);
+	printf("onHookLeave(%p, '%s', %zx)\n", targetFunc, (char*)callbackParam, frameBase);
 }
 
 void
@@ -38,116 +38,95 @@ onHookException(
 	CONTEXT* context
 	)
 {
-	printf("onHookException(%p, %s, %llx)\n", targetFunc, (char*)callbackParam, frameBase);
+	printf("onHookException(%p, '%s', %zx)\n", targetFunc, (char*)callbackParam, frameBase);
 }
 
 //..............................................................................
 
-int seh_baz_filter(EXCEPTION_POINTERS* exceptionPointers)
+int
+baz_filter(EXCEPTION_POINTERS* exceptionPointers)
 {
-	printf("seh_baz_filter\n");
+	printf("baz_filter\n");
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 
 int* g_p = NULL;
 
-void seh_baz()
+void
+baz()
 {
 	__try
 	{
-		printf("seh_baz\n");
+		printf("baz\n");
 		*g_p = 0;
 	}
-	__except(seh_baz_filter(GetExceptionInformation()))
+	__except(baz_filter(GetExceptionInformation()))
 	{
-		printf("seh_baz::__except\n");
+		printf("baz:__except\n");
 	}
 }
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-int seh_bar_filter(EXCEPTION_POINTERS* exceptionPointers)
+int
+bar_filter(EXCEPTION_POINTERS* exceptionPointers)
 {
-	printf("seh_bar_filter\n");
+	printf("bar_filter\n");
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 
-void seh_bar()
+void
+bar()
 {
 	__try
 	{
-		printf("seh_bar\n");
+		printf("bar\n");
 		typedef void BazFunc();
 		((BazFunc*)g_bazHook)();
 	}
-	__except(seh_bar_filter(GetExceptionInformation()))
+	__except(bar_filter(GetExceptionInformation()))
 	{
-		printf("seh_bar::__except\n");
+		printf("bar:__except\n");
 	}
 }
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-int seh_foo_filter(EXCEPTION_POINTERS* exceptionPointers)
+int
+foo_filter(
+	EXCEPTION_POINTERS* exceptionPointers,
+	bool recover
+	)
 {
-	printf("seh_foo_filter\n");
-	return EXCEPTION_CONTINUE_SEARCH;
-//	return EXCEPTION_EXECUTE_HANDLER;
+	printf("foo_filter\n");
+
+	if (!recover)
+		return EXCEPTION_EXECUTE_HANDLER;
+
+	DWORD oldProtect;
+	::VirtualProtect(g_p, 4096, PAGE_READWRITE, &oldProtect);
+	return EXCEPTION_CONTINUE_EXECUTION;
 }
 
-void seh_foo()
+void
+foo(bool recover)
 {
 	__try
 	{
-		printf("seh_foo\n");
-		seh_bar();
+		printf("foo\n");
+		bar();
 	}
-	__except(seh_foo_filter(GetExceptionInformation()))
+	__except(foo_filter(GetExceptionInformation(), recover))
 	{
-		printf("seh_foo::__except\n");
+		printf("foo:__except\n");
 	}
 }
 
 //..............................................................................
 
-int seh_main_filter(EXCEPTION_POINTERS* exceptionPointers)
+int
+main()
 {
-	printf("seh_main_filter\n");
-
-	DWORD oldProtect;
-	::VirtualProtect(g_p, 4096, PAGE_READWRITE, &oldProtect);
-
-	return EXCEPTION_CONTINUE_EXECUTION;
-}
-
-int main()
-{
-#if (0)
-
-#if (_AXL_OS_WIN)
-	BOOL result = SymInitialize(INVALID_HANDLE_VALUE, NULL, true);
-
-	__try
-	{
-#if (_PRINT_UNWIND_INFO)
-		g_context.ContextFlags = CONTEXT_CONTROL;
-		RtlCaptureContext(&g_context);
-		printUnwindInfo(g_context.Rip);
-#endif
-		test(10, 20, 30, 40, 50, 60, 70, 80, 90, 100);
-	}
-	__except(mainSehFilter(GetExceptionInformation()))
-	{
-		printf("exception caught in main()\n");
-	}
-#else
-	setvbuf(stdout, NULL, _IOLBF, 1024);
-
-	test(10, 20, 30, 40, 50, 60, 70, 80, 90, 100);
-#endif
-
-#endif
-
 	g_p = (int*)::VirtualAlloc(
 		NULL,
 		4096,
@@ -155,17 +134,10 @@ int main()
 		PAGE_READONLY
 		);
 
-	g_bazHook = plh::allocateHook(seh_baz, "BAZ!", onHookEnter, onHookLeave, onHookException);
+	g_bazHook = plh::allocateHook(baz, "hook-param", onHookEnter, onHookLeave, onHookException);
 
-	__try
-	{
-		printf("main\n");
-		seh_foo();
-	}
-	__except(seh_main_filter(GetExceptionInformation()))
-	{
-		printf("main::__except\n");
-	}
+	foo(false);
+	foo(true);
 
 	plh::freeHook(g_bazHook);
 

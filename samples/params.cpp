@@ -1,5 +1,7 @@
 ﻿#include <stdio.h>
 #include <stdint.h>
+#include <assert.h>
+
 #include "protolesshooks.h"
 
 //..............................................................................
@@ -47,76 +49,34 @@ fooHookEnter(
 		(void*)frameBase
 		);
 
-	size_t regArgBase = frameBase + plh::FrameOffset_RegArg;
-	size_t stackArgBase = frameBase + plh::FrameOffset_StackArg;
+#if (_PLH_CPU_AMD64)
+#	if (_PLH_CPP_MSC)
+	plh::RegArgBlock* regArgBlock = (plh::RegArgBlock*)(frameBase + plh::FrameOffset_RegArgBlock);
 
-#if (WIN32)
-	// for foo, the arg reg mapping is as follows:
+	int a    = (int)regArgBlock->m_rcx;
+	double b = regArgBlock->m_xmm1[1];
+	int c    = (int)regArgBlock->m_r8;
+	double d = regArgBlock->m_xmm1[3];
 
-	//   a <-> rcx
-	//   c <-> r8
-	//   b <-> xmm1
-	//   d <-> xmm2
+	va_list va;
+	plh::vaStart(va, frameBase);
 
-	int a = *(int*)(regArgBase - 8 * 0);
-	double b = *(double*)(regArgBase - 4 * 8 - 16 * 1);
-	int c = *(int*)(regArgBase - 8 * 2);
-	double d = *(double*)(regArgBase - 4 * 8 - 16 * 3);
-	int e = *(int*)(stackArgBase + 8 * 0);
-	double f = *(double*)(stackArgBase + 8 * 1);
-	int g = *(int*)(stackArgBase + 8 * 2);
-	double h = *(double*)(stackArgBase + 8 * 3);
-	int i = *(int*)(stackArgBase + 8 * 4);
-	double j = *(double*)(stackArgBase + 8 * 5);
-	int k = *(int*)(stackArgBase + 8 * 6);
-	double l = *(double*)(stackArgBase + 8 * 7);
-	int m = *(int*)(stackArgBase + 8 * 8);
-	double n = *(double*)(stackArgBase + 8 * 9);
-	int o = *(int*)(stackArgBase + 8 * 10);
-	double p = *(double*)(stackArgBase + 8 * 11);
-	int q = *(int*)(stackArgBase + 8 * 12);
-	double r = *(double*)(stackArgBase + 8 * 13);
+	int e = plh::vaArg<int>(va);
+	double f = plh::vaArg<double>(va);
+	int g = plh::vaArg<int>(va);
+	double h = plh::vaArg<double>(va);
+	int i = plh::vaArg<int>(va);
+	double j = plh::vaArg<double>(va);
+	int k = plh::vaArg<int>(va);
+	double l = plh::vaArg<double>(va);
+	int m = plh::vaArg<int>(va);
+	double n = plh::vaArg<double>(va);
+	int o = plh::vaArg<int>(va);
+	double p = plh::vaArg<double>(va);
+	int q = plh::vaArg<int>(va);
+	double r = plh::vaArg<double>(va);
 
-	printf(
-		"  ("
-		"%d, %f, %d, %f, %d, %f, "
-		"%d, %f, %d, %f, %d, %f, "
-		"%d, %f, %d, %f, %d, %f)\n",
-		a, b, c, d, e, f,
-		g, h, i, j, k, l,
-		m, n, o, p, q, r
-		);
-#else
-	// for foo, the arg reg mapping is as follows:
-
-	//   a <-> rdi
-	//   c <-> rsi
-	//   e <-> rdx
-	//   g <-> rcx
-	//   i <-> r8
-	//   k <-> r9
-
-	//   b .. p <-> xmm0 .. xmm7
-
-	int a = *(int*)(regArgBase - 8 * 0);
-	int c = *(int*)(regArgBase - 8 * 1);
-	int e = *(int*)(regArgBase - 8 * 2);
-	int g = *(int*)(regArgBase - 8 * 3);
-	int i = *(int*)(regArgBase - 8 * 4);
-	int k = *(int*)(regArgBase - 8 * 5);
-	double b = *(double*)(regArgBase - 6 * 8 - 16 * 0);
-	double d = *(double*)(regArgBase - 6 * 8 - 16 * 1);
-	double f = *(double*)(regArgBase - 6 * 8 - 16 * 2);
-	double h = *(double*)(regArgBase - 6 * 8 - 16 * 3);
-	double j = *(double*)(regArgBase - 6 * 8 - 16 * 4);
-	double l = *(double*)(regArgBase - 6 * 8 - 16 * 5);
-	double n = *(double*)(regArgBase - 6 * 8 - 16 * 6);
-	double p = *(double*)(regArgBase - 6 * 8 - 16 * 7);
-
-	int m = *(int*)(stackArgBase + 8 * 0);
-	int o = *(int*)(stackArgBase + 8 * 1);
-	int q = *(int*)(stackArgBase + 8 * 2);
-	double r = *(double*)(stackArgBase + 8 * 3);
+	plh::vaEnd(va);
 
 	printf(
 		"  ("
@@ -127,7 +87,77 @@ fooHookEnter(
 		g, h, i, j, k, l,
 		m, n, o, p, q, r
 		);
+#	elif (_PLH_CPP_GCC)
+	plh::RegArgBlock* regArgBlock = (plh::RegArgBlock*)(frameBase + plh::FrameOffset_RegArgBlock);
 
+	int a = (int)regArgBlock->m_rdi;
+	int c = (int)regArgBlock->m_rsi;
+	int e = (int)regArgBlock->m_rdx;
+	int g = (int)regArgBlock->m_rcx;
+	int i = (int)regArgBlock->m_r8;
+	int k = (int)regArgBlock->m_r9;
+	double b = regArgBlock->m_xmm0[0];
+	double d = regArgBlock->m_xmm1[0];
+	double f = regArgBlock->m_xmm2[0];
+	double h = regArgBlock->m_xmm3[0];
+	double j = regArgBlock->m_xmm4[0];
+	double l = regArgBlock->m_xmm5[0];
+	double n = regArgBlock->m_xmm6[0];
+	double p = regArgBlock->m_xmm7[0];
+
+	va_list va;
+	plh::vaStart(va, frameBase);
+
+	int m = plh::vaArg<int>(va);
+	int o = plh::vaArg<int>(va);
+	int q = plh::vaArg<int>(va);
+	double r = plh::vaArg<double>(va);
+
+	plh::vaEnd(va);
+
+	printf(
+		"  ("
+		"%d, %f, %d, %f, %d, %f, "
+		"%d, %f, %d, %f, %d, %f, "
+		"%d, %f, %d, %f, %d, %f)\n",
+		a, b, c, d, e, f,
+		g, h, i, j, k, l,
+		m, n, o, p, q, r
+		);
+
+#	endif
+#elif (_PLH_CPU_X86)
+	plh::VaList va;
+	plh::vaStart(va, frameBase);
+
+	int a = plh::vaArg<int>(va);
+	double b = plh::vaArg<double>(va);
+	int c = plh::vaArg<int>(va);
+	double d = plh::vaArg<double>(va);
+	int e = plh::vaArg<int>(va);
+	double f = plh::vaArg<double>(va);
+	int g = plh::vaArg<int>(va);
+	double h = plh::vaArg<double>(va);
+	int i = plh::vaArg<int>(va);
+	double j = plh::vaArg<double>(va);
+	int k = plh::vaArg<int>(va);
+	double l = plh::vaArg<double>(va);
+	int m = plh::vaArg<int>(va);
+	double n = plh::vaArg<double>(va);
+	int o = plh::vaArg<int>(va);
+	double p = plh::vaArg<double>(va);
+	int q = plh::vaArg<int>(va);
+	double r = plh::vaArg<double>(va);
+
+	printf(
+		"  ("
+		"%d, %f, %d, %f, %d, %f, "
+		"%d, %f, %d, %f, %d, %f, "
+		"%d, %f, %d, %f, %d, %f)\n",
+		a, b, c, d, e, f,
+		g, h, i, j, k, l,
+		m, n, o, p, q, r
+		);
 #endif
 }
 

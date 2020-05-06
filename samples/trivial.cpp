@@ -11,9 +11,9 @@ int foo()
 	return 123;
 }
 
-//..............................................................................
+// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-// enter & leave callbacks
+// enter & leave hooks
 
 void
 fooHookEnter(
@@ -50,7 +50,8 @@ fooHookLeave(
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-int main()
+int
+main()
 {
 	typedef int FooFunc();
 
