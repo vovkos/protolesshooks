@@ -4,7 +4,7 @@ Prototypeless Hooks
 Abstract
 --------
 
-The general idea of **API hooking** is to intercept calls which a process is making to system or 3rd-party libraries and make these calls go through your *spy* functions, also known as *hooks*. Hooking can be essential in reverse-engineering and many other non-trivial debugging scenarios. There exist a wide range of different hooking techniques; depending on the method, hooks allow you to:
+The general idea of **API hooking** is to intercept calls to system or 3rd-party libraries and redirect those calls through your *spy* functions, also known as *hooks*. Hooking can be essential in reverse-engineering and many other non-trivial debugging scenarios. Depending on the chosen hooking method, hooks may allow you to:
 
 1. Display API function names called by the process;
 2. Measure the time of each call;
@@ -12,22 +12,22 @@ The general idea of **API hooking** is to intercept calls which a process is mak
 4. Inspect/modify function call arguments;
 5. Inspect/modify return values.
 
-However, most hooking-related libraries, frameworks, and articles concentrate on *injection* techniques, i.e. how to modify the process' memory in order to make your hook called every time the process attempts to access the original function. Once it's accomplished, it is assumed that the problem is solved -- your hook can now call the original function and then pass its return value back to the caller, performing the necessary logging or argument/retval modification in the process.
+Most hooking-related libraries, frameworks, and articles focus on *injection* techniques, i.e., the details of modifying the process' memory in order to make your hook called every time the process invokes the original function. Once this task is accomplished, the problem is assumed to be solved -- your hook can now proxy-call the original function, pass its return value back to the caller, and perform logging/argument/retval modification as necessary.
 
-The principal problem here is that without the knowledge of *target function prototypes* you can't do this simple proxy-calling! It's still relatively easy to log function arguments and then just jump to the original function; it allows for making a planar list of API calls, i.e. the capability (1) of the list above. But for (2), (3), and (5) your hook needs to *gain control back after return* from the target function -- trivial with the knowledge of target function prototypes, challenging without. And encoding prototypes for *all* the library calls in a process is nearly impossible -- there may be hundreds of different API calls, some of which may be undocumented at all.
+The problem here, however, is that without the full knowledge of *target function prototypes* you can't do this proxy-calling! It's easy to jump directly to the original function; it allows for logging a planar list of API calls (i.e. the capability (1) of the list above). But for (2), (3), and (5) your hook needs to *gain control back after return* from the target function -- which is trivial with the knowledge of target function prototypes, and quite challenging without. Not to state the obvious, but encoding prototypes for *all* the library calls in a process is nearly impossible -- there may be hundreds of different API calls, some of which could be undocumented.
 
-This library provides a non-intrusive (non-trampoline) hooking technique capable of return hijacking *without* the knowledge of target functions prototypes.
+The ``protolesshooks`` library provides a non-intrusive (non-trampoline) thunking technique capable of return hijacking *without* the knowledge of target functions prototypes.
 
 Features
 --------
 
 * Return address hijacking without prototypes
-* Detects exits via Windows SEH x64
+* Detection of exception exits via Windows SEH
 * Supported calling conventions:
-	- Microsoft x64
-	- SystemV AMD64 (GCC, Clang)
-	- x86 cdecl & stdcall (MSVC, GCC, Clang)
+- Microsoft x64 (MSVC)
+- SystemV AMD64 (GCC/Clang)
+- x86 cdecl & stdcall (MSVC, GCC/Clang)
 
-With ``protolesshooks`` it is possible, for example, to enumerare and intercept all shared libraries in a process, gain an overview, then gradually add prototype information for parameter/retval decoding where necessary.
+With ``protolesshooks`` it is possible, for example, to enumerare and intercept all shared libraries in a process, gain a bird's-eye overview of the API call-graph, then gradually add prototype information for parameter/retval decoding as necessary.
 
-	* A point worth mentioning is that with this method, the prototype information can be incomplete. For instance, we may have some clues about the first two parameters for a particular function, but no idea about the rest. With the traditional hooking (when your hook is inserted into the call chain), it's just not going to work unless you have *exact* information about the expected stack frame. With ``protolesshooks`` it's absolutely fine.
+	A point worth mentioning is that with the presented method, the prototype information can be incomplete. For instance, we may have some clues about the first two parameters of a particular function, but no idea about the rest. With the traditional hooking (when your hook is inserted into the call chain), it's just not going to work unless you have *exact* information about the expected stack frame. With ``protolesshooks`` it's absolutely fine.
