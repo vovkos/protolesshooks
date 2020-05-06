@@ -6,8 +6,8 @@ section .text
 
 	extern targetFunc
 	extern hook
-	extern hookEnterFunc
-	extern hookLeaveFunc
+	extern hookEnter
+	extern hookLeave
 	extern hookRet
 
 thunk_entry:
@@ -40,7 +40,7 @@ thunk_entry:
 	mov     rdi, hook
 	mov     rsi, rbp
 	mov     rdx, [rbp + 8]
-	mov     rax, hookEnterFunc
+	mov     rax, hookEnter
 	call    rax
 
 	; restore all arg registers
@@ -95,7 +95,7 @@ hook_ret:
 	mov     rdi, hook
 	mov     rsi, rbp
 	mov     rdx, rax
-	mov     rax, hookLeaveFunc
+	mov     rax, hookLeave
 	call    rax
 
 	; rax now holds the original return pointer

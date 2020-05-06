@@ -9,36 +9,24 @@
 plh::Hook* g_bazHook;
 
 void
-onHookEnter(
+bazHookEnter(
 	void* targetFunc,
 	void* callbackParam,
 	size_t frameBase
 	)
 {
-	printf("onHookEnter(%p, '%s', %zx)\n", targetFunc, (char*)callbackParam, frameBase);
+	printf("bazHookEnter(%p, '%s', %zx)\n", targetFunc, (char*)callbackParam, frameBase);
 }
 
 void
-onHookLeave(
+bazHookLeave(
 	void* targetFunc,
 	void* callbackParam,
 	size_t frameBase,
 	size_t returnValue
 	)
 {
-	printf("onHookLeave(%p, '%s', %zx)\n", targetFunc, (char*)callbackParam, frameBase);
-}
-
-void
-onHookException(
-	void* targetFunc,
-	void* callbackParam,
-	size_t frameBase,
-	EXCEPTION_RECORD* exception,
-	CONTEXT* context
-	)
-{
-	printf("onHookException(%p, '%s', %zx)\n", targetFunc, (char*)callbackParam, frameBase);
+	printf("bazHookLeave(%p, '%s', %zx)\n", targetFunc, (char*)callbackParam, frameBase);
 }
 
 //..............................................................................
@@ -134,7 +122,7 @@ main()
 		PAGE_READONLY
 		);
 
-	g_bazHook = plh::allocateHook(baz, "hook-param", onHookEnter, onHookLeave, onHookException);
+	g_bazHook = plh::allocateHook(baz, "hook-param", bazHookEnter, bazHookLeave);
 
 	foo(false);
 	foo(true);

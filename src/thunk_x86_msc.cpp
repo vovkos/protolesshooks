@@ -1,5 +1,6 @@
 ﻿#include <stdint.h>
 #include <windows.h>
+#include <stdio.h>
 
 #include "protolesshooks.h"
 
@@ -20,7 +21,7 @@ uint8_t g_thunkCode[] =
 	0x89, 0x6C, 0x24, 0x04,                    // 00000010  mov     [esp + 4], ebp
 	0x8B, 0x45, 0x04,                          // 00000014  mov     eax, [ebp + 4]
 	0x89, 0x44, 0x24, 0x08,                    // 00000017  mov     [esp + 8], eax
-	0xB8, 0x00, 0x00, 0x00, 0x00,              // 0000001B  mov     eax, hookEnterFunc
+	0xB8, 0x00, 0x00, 0x00, 0x00,              // 0000001B  mov     eax, hookEnter
 	0xFF, 0xD0,                                // 00000020  call    eax
 	0x83, 0xC4, 0x10,                          // 00000022  add     esp, 16
 	0x83, 0xC4, 0x08,                          // 00000025  add     esp, STACK_FRAME_SIZE
@@ -38,7 +39,7 @@ uint8_t g_thunkCode[] =
 	0xC7, 0x04, 0x24, 0x00, 0x00, 0x00, 0x00,  // 00000047  mov     dword [esp + 0], hook
 	0x89, 0x6C, 0x24, 0x04,                    // 0000004E  mov     [esp + 4], ebp
 	0x89, 0x44, 0x24, 0x08,                    // 00000052  mov     [esp + 8], eax
-	0xB8, 0x00, 0x00, 0x00, 0x00,              // 00000056  mov     eax, hookLeaveFunc
+	0xB8, 0x00, 0x00, 0x00, 0x00,              // 00000056  mov     eax, hookLeave
 	0xFF, 0xD0,                                // 0000005B  call    eax
 	0x83, 0xC4, 0x10,                          // 0000005D  add     esp, 16
 	0x89, 0x45, 0x04,                          // 00000060  mov     [ebp + 4], eax
@@ -52,15 +53,14 @@ uint8_t g_thunkCode[] =
 
 enum ThunkCodeOffset
 {
-	ThunkCodeOffset_HookPtr1             = 0x0c,
-	ThunkCodeOffset_HookEnterFuncPtr     = 0x1c,
-	ThunkCodeOffset_HookRetPtr           = 0x2a,
-	ThunkCodeOffset_TargetFuncPtr        = 0x32,
-	ThunkCodeOffset_HookRet              = 0x38,
-	ThunkCodeOffset_HookPtr2             = 0x4a,
-	ThunkCodeOffset_HookLeaveFuncPtr     = 0x57,
-	ThunkCodeOffset_HookExceptionFuncPtr = 0xff,
-	ThunkCodeOffset_End                  = sizeof(g_thunkCode),
+	ThunkCodeOffset_HookPtr1      = 0x0c,
+	ThunkCodeOffset_HookEnterPtr  = 0x1c,
+	ThunkCodeOffset_HookRetPtr    = 0x2a,
+	ThunkCodeOffset_TargetFuncPtr = 0x32,
+	ThunkCodeOffset_HookRet       = 0x38,
+	ThunkCodeOffset_HookPtr2      = 0x4a,
+	ThunkCodeOffset_HookLeavePtr  = 0x57,
+	ThunkCodeOffset_End           = sizeof(g_thunkCode),
 };
 
 //..............................................................................
@@ -72,12 +72,13 @@ struct Hook
 	void* m_callbackParam;
 	HookEnterFunc* m_enterFunc;
 	HookLeaveFunc* m_leaveFunc;
-	HookExceptionFunc* m_exceptionFunc;
 };
 
 //..............................................................................
 
-thread_local uint64_t g_originalRet;
+thread_local uint32_t g_originalRet = 0;
+thread_local uint32_t g_frameBase = 0;
+thread_local Hook* g_hook = 0;
 
 void
 hookEnter(
@@ -89,10 +90,12 @@ hookEnter(
 	if (hook->m_enterFunc)
 		hook->m_enterFunc(hook->m_targetFunc, hook->m_callbackParam, ebp);
 
+	g_hook = hook;
+	g_frameBase = ebp;
 	g_originalRet = originalRet;
 }
 
-uint64_t
+uint32_t
 hookLeave(
 	Hook* hook,
 	uint32_t ebp,
@@ -102,6 +105,8 @@ hookLeave(
 	if (hook->m_leaveFunc)
 		hook->m_leaveFunc(hook->m_targetFunc, hook->m_callbackParam, ebp, eax);
 
+	g_hook = NULL;
+	g_frameBase = 0;
 	return g_originalRet;
 }
 
@@ -112,8 +117,7 @@ allocateHook(
 	void* targetFunc,
 	void* callbackParam,
 	HookEnterFunc* enterFunc,
-	HookLeaveFunc* leaveFunc,
-	HookExceptionFunc* exceptionFunc
+	HookLeaveFunc* leaveFunc
 	)
 {
 	Hook* hook = (Hook*)::VirtualAlloc(
@@ -131,14 +135,13 @@ allocateHook(
 	*(void**)(hook->m_thunkCode + ThunkCodeOffset_HookPtr2) = hook;
 	*(void**)(hook->m_thunkCode + ThunkCodeOffset_TargetFuncPtr) = targetFunc;
 	*(void**)(hook->m_thunkCode + ThunkCodeOffset_HookRetPtr) = hook->m_thunkCode + ThunkCodeOffset_HookRet;
-	*(void**)(hook->m_thunkCode + ThunkCodeOffset_HookEnterFuncPtr) = (void*)hookEnter;
-	*(void**)(hook->m_thunkCode + ThunkCodeOffset_HookLeaveFuncPtr) = (void*)hookLeave;
+	*(void**)(hook->m_thunkCode + ThunkCodeOffset_HookEnterPtr) = (void*)hookEnter;
+	*(void**)(hook->m_thunkCode + ThunkCodeOffset_HookLeavePtr) = (void*)hookLeave;
 
 	hook->m_targetFunc = targetFunc;
 	hook->m_callbackParam = callbackParam;
 	hook->m_enterFunc = enterFunc;
 	hook->m_leaveFunc = leaveFunc;
-	hook->m_exceptionFunc = exceptionFunc;
 	return hook;
 }
 

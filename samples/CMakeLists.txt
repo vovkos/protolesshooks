@@ -34,23 +34,4 @@ add_test(
 	COMMAND sample_params
 	)
 
-# . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-
-if(WIN32)
-	add_executable (
-		sample_seh
-		seh.cpp
-		)
-
-	target_link_libraries (
-		sample_seh
-		protolesshooks
-		)
-
-	add_test(
-		NAME sample_seh
-		COMMAND sample_seh
-		)
-endif()
-
 #...............................................................................

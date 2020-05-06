@@ -6,9 +6,9 @@ section .text
 
 	extern targetFunc
 	extern hook
-	extern hookEnterFunc
-	extern hookLeaveFunc
-	extern hookExceptionFunc
+	extern hookEnter
+	extern hookLeave
+	extern hookException
 	extern hookRet
 
 thunk_entry:
@@ -35,7 +35,7 @@ thunk_entry:
 	mov     rcx, hook
 	mov     rdx, rbp
 	mov     r8, [rbp + 8]
-	mov     rax, hookEnterFunc
+	mov     rax, hookEnter
 	call    rax
 
 	; restore all arg registers
@@ -82,7 +82,7 @@ thunk_entry:
 	mov     rcx, hook
 	mov     rdx, rbp
 	mov     r8, rax
-	mov     rax, hookLeaveFunc
+	mov     rax, hookLeave
 	call    rax
 
 	; rax now holds the original return pointer
@@ -100,7 +100,7 @@ thunk_entry:
 
 seh_handler:
 
-	; standard prologue (leaves rpb 16-byte aligned)
+	; standard prologue (leaves rsp & rpb 16-byte aligned)
 
 	push    rbp  ; <<< seh_handler
 	mov     rbp, rsp
@@ -112,7 +112,7 @@ seh_handler:
 
 	; call the hook-exception function
 
-	mov     rax, hookExceptionFunc
+	mov     rax, hookException
 	call    rax
 
 	; rax now holds NULL (for continue) or the original return pointer (for bail)

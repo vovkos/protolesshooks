@@ -36,7 +36,7 @@ uint8_t g_thunkCode[] =
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // 00000056
 	0x48, 0x89, 0xEE,                                // 0000005E  mov     rsi, rbp
 	0x48, 0x8B, 0x55, 0x08,                          // 00000061  mov     rdx, [rbp + 8]
-	0x48, 0xB8,                                      // 00000065  mov     rax, hookEnterFunc
+	0x48, 0xB8,                                      // 00000065  mov     rax, hookEnter
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // 00000067
 	0xFF, 0xD0,                                      // 0000006F  call    rax
 	0x48, 0x8B, 0x7D, 0xF0,                          // 00000071  mov     rdi,  [rbp - 16 - 8 * 0]
@@ -70,7 +70,7 @@ uint8_t g_thunkCode[] =
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // 000000F1
 	0x48, 0x89, 0xEE,                                // 000000F9  mov     rsi, rbp
 	0x48, 0x89, 0xC2,                                // 000000FC  mov     rdx, rax
-	0x48, 0xB8,                                      // 000000FF  mov     rax, hookLeaveFunc
+	0x48, 0xB8,                                      // 000000FF  mov     rax, hookLeave
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // 00000101
 	0xFF, 0xD0,                                      // 00000109  call    rax
 	0x48, 0x89, 0x45, 0x08,                          // 0000010B  mov     [rbp + 8], rax
@@ -84,14 +84,14 @@ uint8_t g_thunkCode[] =
 
 enum ThunkCodeOffset
 {
-	ThunkCodeOffset_HookPtr1         = 0x0056,
-	ThunkCodeOffset_HookEnterFuncPtr = 0x0067,
-	ThunkCodeOffset_HookRetPtr       = 0x00c4,
-	ThunkCodeOffset_TargetFuncPtr    = 0x00d2,
-	ThunkCodeOffset_HookRet          = 0x00dc,
-	ThunkCodeOffset_HookPtr2         = 0x00f1,
-	ThunkCodeOffset_HookLeaveFuncPtr = 0x0101,
-	ThunkCodeOffset_End              = sizeof(g_thunkCode),
+	ThunkCodeOffset_HookPtr1      = 0x0056,
+	ThunkCodeOffset_HookEnterPtr  = 0x0067,
+	ThunkCodeOffset_HookRetPtr    = 0x00c4,
+	ThunkCodeOffset_TargetFuncPtr = 0x00d2,
+	ThunkCodeOffset_HookRet       = 0x00dc,
+	ThunkCodeOffset_HookPtr2      = 0x00f1,
+	ThunkCodeOffset_HookLeavePtr  = 0x0101,
+	ThunkCodeOffset_End           = sizeof(g_thunkCode),
 };
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .

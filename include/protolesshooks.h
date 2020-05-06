@@ -43,23 +43,6 @@ namespace plh {
 
 //..............................................................................
 
-enum FrameOffset
-{
-#if (_PLH_CPU_X86)
-	FrameOffset_StackArgBlock = 8,
-#elif (_PLH_CPU_AMD64)
-#	if (_PLH_CPP_MSC)
-	FrameOffset_RegArgBlock   = -16,
-	FrameOffset_StackArgBlock = 16 + 8 * 4,
-#	elif (_PLH_CPP_GCC)
-	FrameOffset_RegArgBlock   = -16,
-	FrameOffset_StackArgBlock = 16,
-#	endif
-#endif
-};
-
-// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-
 #if (_PLH_CPU_AMD64)
 #	if (_PLH_CPP_MSC)
 
@@ -97,6 +80,23 @@ struct RegArgBlock
 
 #	endif
 #endif
+
+// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+enum FrameOffset
+{
+#if (_PLH_CPU_X86)
+	FrameOffset_StackArgBlock = 8,
+#elif (_PLH_CPU_AMD64)
+#	if (_PLH_CPP_MSC)
+	FrameOffset_RegArgBlock   = -sizeof(RegArgBlock),
+	FrameOffset_StackArgBlock = 16 + 8 * 4,
+#	elif (_PLH_CPP_GCC)
+	FrameOffset_RegArgBlock   = -sizeof(RegArgBlock),
+	FrameOffset_StackArgBlock = 16,
+#	endif
+#endif
+};
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -149,26 +149,6 @@ HookLeaveFunc(
 	size_t returnValue
 	);
 
-#if (_WIN32)
-
-typedef
-void
-HookExceptionFunc(
-	void* targetFunc,
-	void* callbackParam,
-	size_t frameBase,
-	EXCEPTION_RECORD* exception,
-	CONTEXT* context
-	);
-
-#else
-
-typedef
-void
-HookExceptionFunc(); // unused on POSIX
-
-#endif
-
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 struct Hook;
@@ -178,8 +158,7 @@ allocateHook(
 	void* targetFunc,
 	void* callbackParam,
 	HookEnterFunc* enterFunc,
-	HookLeaveFunc* leaveFunc,
-	HookExceptionFunc* exceptionFunc
+	HookLeaveFunc* leaveFunc
 	);
 
 void

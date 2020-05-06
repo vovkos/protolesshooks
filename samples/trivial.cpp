@@ -55,7 +55,7 @@ main()
 {
 	typedef int FooFunc();
 
-	plh::Hook* fooHook = plh::allocateHook((void*)foo, (void*)0xabcdef, fooHookEnter, fooHookLeave, NULL);
+	plh::Hook* fooHook = plh::allocateHook((void*)foo, (void*)0xabcdef, fooHookEnter, fooHookLeave);
 	((FooFunc*)fooHook)();
 	plh::freeHook(fooHook);
 	return 0;

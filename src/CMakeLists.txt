@@ -28,14 +28,14 @@ else()
 		set(
 			SRC_LIST
 			${SRC_LIST}
-			thunk_x86_msc.asm
+			thunk_x86.asm
 			thunk_x86_msc.cpp
 			)
 	else()
 		set(
 			SRC_LIST
 			${SRC_LIST}
-			thunk_x86_gcc.asm
+			thunk_x86.asm
 			thunk_x86_gcc.cpp
 			)
 	endif()

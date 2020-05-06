@@ -6,13 +6,13 @@ section .text
 
 	extern targetFunc
 	extern hook
-	extern hookEnterFunc
-	extern hookLeaveFunc
+	extern hookEnter
+	extern hookLeave
 	extern hookRet
 
 thunk_entry:
 
-	; standard prologue (leaves ebp 8-byte aligned, esp 16-byte aligned)
+	; standard prologue (leaves esp 16-byte aligned, ebp 8-byte aligned)
 
 	push    ebp
 	mov     ebp, esp
@@ -25,7 +25,7 @@ thunk_entry:
 	mov     [esp + 4], ebp
 	mov     eax, [ebp + 4]
 	mov     [esp + 8], eax
-	mov     eax, hookEnterFunc
+	mov     eax, hookEnter
 	call    eax
 	add     esp, 16
 
@@ -63,7 +63,7 @@ thunk_entry:
 	mov     dword [esp + 0], hook
 	mov     [esp + 4], ebp
 	mov     [esp + 8], eax
-	mov     eax, hookLeaveFunc
+	mov     eax, hookLeave
 	call    eax
 	add     esp, 16
 

@@ -1,6 +1,5 @@
 ﻿#include <stdio.h>
 #include <stdint.h>
-#include <assert.h>
 
 #include "protolesshooks.h"
 
@@ -54,11 +53,11 @@ fooHookEnter(
 	plh::RegArgBlock* regArgBlock = (plh::RegArgBlock*)(frameBase + plh::FrameOffset_RegArgBlock);
 
 	int a    = (int)regArgBlock->m_rcx;
-	double b = regArgBlock->m_xmm1[1];
+	double b = regArgBlock->m_xmm1[0];
 	int c    = (int)regArgBlock->m_r8;
-	double d = regArgBlock->m_xmm1[3];
+	double d = regArgBlock->m_xmm3[0];
 
-	va_list va;
+	plh::VaList va;
 	plh::vaStart(va, frameBase);
 
 	int e = plh::vaArg<int>(va);
@@ -105,7 +104,7 @@ fooHookEnter(
 	double n = regArgBlock->m_xmm6[0];
 	double p = regArgBlock->m_xmm7[0];
 
-	va_list va;
+	plh::VaList va;
 	plh::vaStart(va, frameBase);
 
 	int m = plh::vaArg<int>(va);
@@ -195,7 +194,7 @@ int main()
 		int, double
 		);
 
-	plh::Hook* fooHook = plh::allocateHook((void*)foo, (void*)0xabcdef, fooHookEnter, fooHookLeave, NULL);
+	plh::Hook* fooHook = plh::allocateHook((void*)foo, (void*)0xabcdef, fooHookEnter, fooHookLeave);
 
 	((FooFunc*)fooHook)(
 		1, 10.1,

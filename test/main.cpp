@@ -1,5 +1,9 @@
 ﻿#include <stdio.h>
 #include <stdint.h>
+
+#undef NDEBUG
+#include <assert.h>
+
 #include "protolesshooks.h"
 
 //..............................................................................
@@ -28,6 +32,18 @@ int foo(
 		m, n, o, p, q, r
 		);
 
+	assert(
+		a == 1 && b == 10.1 &&
+		c == 2 && d == 20.2 &&
+		e == 3 && f == 30.3 &&
+		g == 4 && h == 40.4 &&
+		i == 5 && j == 50.5 &&
+		k == 6 && l == 60.6 &&
+		m == 7 && n == 70.7 &&
+		o == 8 && p == 80.8 &&
+		q == 9 && r == 90.9
+		);
+
 	return 123;
 }
 
@@ -47,32 +63,34 @@ fooHookEnter(
 		(void*)frameBase
 		);
 
-	size_t stackArgBase = frameBase + plh::FrameOffset_StackArgBlock;
-
 #if (_PLH_CPU_AMD64)
 #	if (_PLH_CPP_MSC)
-
 	plh::RegArgBlock* regArgBlock = (plh::RegArgBlock*)(frameBase + plh::FrameOffset_RegArgBlock);
 
-	int a = (int)regArgBlock->m_rcx;
-	double b = regArgBlock->m_xmm1[1];
-	int c = (int)regArgBlock->m_r8;
-	double d = regArgBlock->m_xmm1[3];
+	int a    = (int)regArgBlock->m_rcx;
+	double b = regArgBlock->m_xmm1[0];
+	int c    = (int)regArgBlock->m_r8;
+	double d = regArgBlock->m_xmm3[0];
 
-	int e = *(int*)(stackArgBase + 8 * 0);
-	double f = *(double*)(stackArgBase + 8 * 1);
-	int g = *(int*)(stackArgBase + 8 * 2);
-	double h = *(double*)(stackArgBase + 8 * 3);
-	int i = *(int*)(stackArgBase + 8 * 4);
-	double j = *(double*)(stackArgBase + 8 * 5);
-	int k = *(int*)(stackArgBase + 8 * 6);
-	double l = *(double*)(stackArgBase + 8 * 7);
-	int m = *(int*)(stackArgBase + 8 * 8);
-	double n = *(double*)(stackArgBase + 8 * 9);
-	int o = *(int*)(stackArgBase + 8 * 10);
-	double p = *(double*)(stackArgBase + 8 * 11);
-	int q = *(int*)(stackArgBase + 8 * 12);
-	double r = *(double*)(stackArgBase + 8 * 13);
+	plh::VaList va;
+	plh::vaStart(va, frameBase);
+
+	int e = plh::vaArg<int>(va);
+	double f = plh::vaArg<double>(va);
+	int g = plh::vaArg<int>(va);
+	double h = plh::vaArg<double>(va);
+	int i = plh::vaArg<int>(va);
+	double j = plh::vaArg<double>(va);
+	int k = plh::vaArg<int>(va);
+	double l = plh::vaArg<double>(va);
+	int m = plh::vaArg<int>(va);
+	double n = plh::vaArg<double>(va);
+	int o = plh::vaArg<int>(va);
+	double p = plh::vaArg<double>(va);
+	int q = plh::vaArg<int>(va);
+	double r = plh::vaArg<double>(va);
+
+	plh::vaEnd(va);
 
 	printf(
 		"  ("
@@ -101,10 +119,15 @@ fooHookEnter(
 	double n = regArgBlock->m_xmm6[0];
 	double p = regArgBlock->m_xmm7[0];
 
-	int m = *(int*)(stackArgBase + 8 * 0);
-	int o = *(int*)(stackArgBase + 8 * 1);
-	int q = *(int*)(stackArgBase + 8 * 2);
-	double r = *(double*)(stackArgBase + 8 * 3);
+	plh::VaList va;
+	plh::vaStart(va, frameBase);
+
+	int m = plh::vaArg<int>(va);
+	int o = plh::vaArg<int>(va);
+	int q = plh::vaArg<int>(va);
+	double r = plh::vaArg<double>(va);
+
+	plh::vaEnd(va);
 
 	printf(
 		"  ("
@@ -117,7 +140,51 @@ fooHookEnter(
 		);
 
 #	endif
+#elif (_PLH_CPU_X86)
+	plh::VaList va;
+	plh::vaStart(va, frameBase);
+
+	int a = plh::vaArg<int>(va);
+	double b = plh::vaArg<double>(va);
+	int c = plh::vaArg<int>(va);
+	double d = plh::vaArg<double>(va);
+	int e = plh::vaArg<int>(va);
+	double f = plh::vaArg<double>(va);
+	int g = plh::vaArg<int>(va);
+	double h = plh::vaArg<double>(va);
+	int i = plh::vaArg<int>(va);
+	double j = plh::vaArg<double>(va);
+	int k = plh::vaArg<int>(va);
+	double l = plh::vaArg<double>(va);
+	int m = plh::vaArg<int>(va);
+	double n = plh::vaArg<double>(va);
+	int o = plh::vaArg<int>(va);
+	double p = plh::vaArg<double>(va);
+	int q = plh::vaArg<int>(va);
+	double r = plh::vaArg<double>(va);
+
+	printf(
+		"  ("
+		"%d, %f, %d, %f, %d, %f, "
+		"%d, %f, %d, %f, %d, %f, "
+		"%d, %f, %d, %f, %d, %f)\n",
+		a, b, c, d, e, f,
+		g, h, i, j, k, l,
+		m, n, o, p, q, r
+		);
 #endif
+
+	assert(
+		a == 1 && b == 10.1 &&
+		c == 2 && d == 20.2 &&
+		e == 3 && f == 30.3 &&
+		g == 4 && h == 40.4 &&
+		i == 5 && j == 50.5 &&
+		k == 6 && l == 60.6 &&
+		m == 7 && n == 70.7 &&
+		o == 8 && p == 80.8 &&
+		q == 9 && r == 90.9
+		);
 }
 
 void
@@ -140,8 +207,7 @@ fooHookLeave(
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-int
-main()
+int main()
 {
 	typedef int FooFunc(
 		int, double,
@@ -155,7 +221,7 @@ main()
 		int, double
 		);
 
-	plh::Hook* fooHook = plh::allocateHook((void*)foo, (void*)0xabcdef, fooHookEnter, fooHookLeave, NULL);
+	plh::Hook* fooHook = plh::allocateHook((void*)foo, (void*)0xabcdef, fooHookEnter, fooHookLeave);
 
 	((FooFunc*)fooHook)(
 		1, 10.1,
