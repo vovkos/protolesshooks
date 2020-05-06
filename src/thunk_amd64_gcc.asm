@@ -45,14 +45,14 @@ thunk_entry:
 
 	; restore all arg registers
 
-	movdqa  xmm0, [rbp - 16 * 1]
-	movdqa  xmm1, [rbp - 16 * 2]
-	movdqa  xmm2, [rbp - 16 * 3]
-	movdqa  xmm3, [rbp - 16 * 4]
-	movdqa  xmm4, [rbp - 16 * 5]
-	movdqa  xmm5, [rbp - 16 * 6]
-	movdqa  xmm6, [rbp - 16 * 7]
-	movdqa  xmm7, [rbp - 16 * 8]
+	movdqa  xmm7, [rbp - 16 * 1]
+	movdqa  xmm6, [rbp - 16 * 2]
+	movdqa  xmm5, [rbp - 16 * 3]
+	movdqa  xmm4, [rbp - 16 * 4]
+	movdqa  xmm3, [rbp - 16 * 5]
+	movdqa  xmm2, [rbp - 16 * 6]
+	movdqa  xmm1, [rbp - 16 * 7]
+	movdqa  xmm0, [rbp - 16 * 8]
 	mov     r9,   [rbp - 16 * 8 - 8 * 1]
 	mov     r8,   [rbp - 16 * 8 - 8 * 2]
 	mov     rcx,  [rbp - 16 * 8 - 8 * 3]
@@ -81,7 +81,7 @@ hook_ret:
 
 	; re-create our stack frame (compensating ret from targetFunc)
 
-	sub     rsp, 8  ; <<< hook_ret
+	sub     rsp, 8  ; <<< hookRet
 	push    rbp
 	mov     rbp, rsp
 	sub     rsp, STACK_FRAME_SIZE
