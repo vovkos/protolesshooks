@@ -12,4 +12,9 @@ target_link_libraries (
 	protolesshooks
 	)
 
+add_test(
+	NAME test_main
+	COMMAND test_main
+	)
+
 #...............................................................................
