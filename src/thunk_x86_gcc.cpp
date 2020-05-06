@@ -1,6 +1,8 @@
-﻿#include <stdint.h>
-#include <windows.h>
-#include <stdio.h>
+﻿#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/mman.h>
 
 #include "protolesshooks.h"
 
@@ -8,7 +10,7 @@ namespace plh {
 
 //..............................................................................
 
-// nasm -fwin32 -lthunk_x86.asm.lst thunk_x86.asm
+// nasm -felf32 -lthunk_x86.asm.lst thunk_x86.asm
 // perl nasm-list-to-cpp.pl thunk_x86.asm.lst
 
 uint8_t g_thunkCode[] =
@@ -77,8 +79,6 @@ struct Hook
 //..............................................................................
 
 thread_local uint32_t g_originalRet = 0;
-thread_local uint32_t g_frameBase = 0;
-thread_local Hook* g_hook = 0;
 
 void
 hookEnter(
@@ -90,8 +90,6 @@ hookEnter(
 	if (hook->m_enterFunc)
 		hook->m_enterFunc(hook->m_targetFunc, hook->m_callbackParam, ebp);
 
-	g_hook = hook;
-	g_frameBase = ebp;
 	g_originalRet = originalRet;
 }
 
@@ -105,8 +103,6 @@ hookLeave(
 	if (hook->m_leaveFunc)
 		hook->m_leaveFunc(hook->m_targetFunc, hook->m_callbackParam, ebp, eax);
 
-	g_hook = NULL;
-	g_frameBase = 0;
 	return g_originalRet;
 }
 
@@ -120,14 +116,14 @@ allocateHook(
 	HookLeaveFunc* leaveFunc
 	)
 {
-	Hook* hook = (Hook*)::VirtualAlloc(
-		NULL,
-		sizeof(Hook),
-		MEM_COMMIT | MEM_RESERVE,
-		PAGE_EXECUTE_READWRITE
-		);
-
+	Hook* hook = (Hook*)malloc(sizeof(Hook));
 	if (!hook)
+		return NULL;
+
+	int pageSize = ::getpagesize();
+	size_t pageAddr = (size_t)hook& ~(pageSize - 1);
+	int result = ::mprotect((void*)pageAddr, pageSize, PROT_READ | PROT_WRITE | PROT_EXEC);
+	if (result != 0)
 		return NULL;
 
 	memcpy(hook->m_thunkCode, g_thunkCode, sizeof(g_thunkCode));
@@ -148,7 +144,7 @@ allocateHook(
 void
 freeHook(Hook* hook)
 {
-	::VirtualFree(hook, sizeof(Hook), MEM_RELEASE);
+	free(hook);
 }
 
 //..............................................................................

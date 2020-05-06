@@ -1,6 +1,5 @@
 ﻿#include <stdint.h>
 #include <windows.h>
-#include <stdio.h>
 
 #include "protolesshooks.h"
 
@@ -77,8 +76,6 @@ struct Hook
 //..............................................................................
 
 thread_local uint32_t g_originalRet = 0;
-thread_local uint32_t g_frameBase = 0;
-thread_local Hook* g_hook = 0;
 
 void
 hookEnter(
@@ -90,8 +87,6 @@ hookEnter(
 	if (hook->m_enterFunc)
 		hook->m_enterFunc(hook->m_targetFunc, hook->m_callbackParam, ebp);
 
-	g_hook = hook;
-	g_frameBase = ebp;
 	g_originalRet = originalRet;
 }
 
@@ -105,8 +100,6 @@ hookLeave(
 	if (hook->m_leaveFunc)
 		hook->m_leaveFunc(hook->m_targetFunc, hook->m_callbackParam, ebp, eax);
 
-	g_hook = NULL;
-	g_frameBase = 0;
 	return g_originalRet;
 }
 
