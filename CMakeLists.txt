@@ -7,7 +7,7 @@ enable_testing()
 set(PLH_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR})
 set(PLH_INC_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
 
-if(CMAKE_COMPILER_IS_GNUCXX)
+if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	set(TARGET_CPU CACHE STRING "Target CPU for cross-compilation")
 
 	set_property(
