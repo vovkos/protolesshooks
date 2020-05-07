@@ -1,15 +1,19 @@
 ﻿#include <stdint.h>
 #include <windows.h>
-#include <winnt.h>
 #include <assert.h>
 
 #include "protolesshooks.h"
 
 //..............................................................................
 
-// missing declaration from winnt.h
+// depending on Windows SDK, these declarations may be missing from winnt.h
+// prefix structs with PLH_ to avoid name collisions when they ARE in winnt.h
 
-struct UNWIND_INFO
+#ifndef UNW_FLAG_EHANDLER
+#	define UNW_FLAG_EHANDLER       0x1
+#endif
+
+struct PLH_UNWIND_INFO
 {
 	UCHAR Version       : 3;
 	UCHAR Flags         : 5;
@@ -17,6 +21,21 @@ struct UNWIND_INFO
 	UCHAR CountOfCodes;
 	UCHAR FrameRegister : 4;
 	UCHAR FrameOffset   : 4;
+};
+
+struct PLH_DISPATCHER_CONTEXT
+{
+	DWORD64 ControlPc;
+	DWORD64 ImageBase;
+	PRUNTIME_FUNCTION FunctionEntry;
+	DWORD64 EstablisherFrame;
+	DWORD64 TargetIp;
+	PCONTEXT ContextRecord;
+	PEXCEPTION_ROUTINE LanguageHandler;
+	PVOID HandlerData;
+	PUNWIND_HISTORY_TABLE HistoryTable;
+	DWORD ScopeIndex;
+	DWORD Fill0;
 };
 
 namespace plh {
@@ -118,7 +137,7 @@ struct Hook
 {
 	uint8_t m_thunkCode[(ThunkCodeOffset_End & ~7) + 8]; // align on 8
 	RUNTIME_FUNCTION m_runtimeFunction;
-	UNWIND_INFO m_unwindInfo;
+	PLH_UNWIND_INFO m_unwindInfo;
 	ULONG m_exceptionHandler;
 	ULONG m_exceptionHandlerParamPadding;
 	void* m_targetFunc;
@@ -133,11 +152,11 @@ struct Hook
 
 bool
 dispatchException(
-    EXCEPTION_RECORD* exceptionRecord,
+	EXCEPTION_RECORD* exceptionRecord,
 	CONTEXT* exceptionContext,
 	uint64_t rip0,
 	uint64_t rsp0
-    )
+	)
 {
 	CONTEXT currentContext = *exceptionContext;
 	currentContext.Rip = rip0;
@@ -155,8 +174,8 @@ dispatchException(
 			if (currentContext.Rip == retRip) // broken stack (will cause infinite loop)
 				break;
 
-            currentContext.Rip = retRip;
-            currentContext.Rsp += 8;
+			currentContext.Rip = retRip;
+			currentContext.Rsp += 8;
 			continue;
 		}
 
@@ -184,7 +203,7 @@ dispatchException(
 		if (!exceptionRoutine || !i) // skip the first handler (it's us)
 			continue;
 
-	    DISPATCHER_CONTEXT dispatcherContext;
+	    PLH_DISPATCHER_CONTEXT dispatcherContext;
 		dispatcherContext.ControlPc = handlerRip;
 		dispatcherContext.ImageBase = imageBase;
 		dispatcherContext.FunctionEntry = function;
@@ -265,7 +284,7 @@ hookException(
 	EXCEPTION_RECORD* exceptionRecord,
 	uint64_t establisherFrame,
 	CONTEXT* contextRecord,
-	DISPATCHER_CONTEXT* dispatcherContext
+	PLH_DISPATCHER_CONTEXT* dispatcherContext
 	)
 {
 	bool result = dispatchException(
@@ -309,7 +328,7 @@ allocateHook(
 
 	hook->m_runtimeFunction.BeginAddress = 0;
 	hook->m_runtimeFunction.EndAddress = sizeof(g_thunkCode);
-	hook->m_runtimeFunction.UnwindInfoAddress = FIELD_OFFSET(Hook, m_unwindInfo);
+	hook->m_runtimeFunction.UnwindData = FIELD_OFFSET(Hook, m_unwindInfo);
 
 	hook->m_unwindInfo.Version = 1;
 	hook->m_unwindInfo.Flags = UNW_FLAG_EHANDLER;
