@@ -1,6 +1,11 @@
 Prototypeless Hooks
 ===================
 
+.. image:: https://travis-ci.org/vovkos/protolesshooks.svg?branch=master
+	:target: https://travis-ci.org/vovkos/protolesshooks
+.. image:: https://ci.appveyor.com/api/projects/status/enh19e87fmxhqurc?svg=true
+	:target: https://ci.appveyor.com/project/vovkos/protolesshooks
+
 Abstract
 --------
 
