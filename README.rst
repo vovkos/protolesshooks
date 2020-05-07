@@ -9,7 +9,7 @@ Prototypeless Hooks
 Abstract
 --------
 
-The ``protolesshooks`` library provides a non-intrusive (non-trampoline) thunking technique capable of return address hijacking *without* the knowledge of target functions prototypes.
+The ``protolesshooks`` library provides a thunking engine with support for function exit hooks and SEH-x64 exception hooks which works *without* information about the *target functions prototypes*.
 
 This code is intended for use in the upcoming **API Spy** plugin for `IO Ninja <https://ioninja.com>`__; API Spy is going to be an advanced cross-platform alternative for ``ltrace``.
 
@@ -35,9 +35,9 @@ The ``protolesshooks`` library provides return-hijacking thunks which work *with
 Features
 --------
 
-* Function entry hook;
-* Function exit hook;
-* SEH exit hook (Windows x64 only).
+* Function entry hooks;
+* Function exit hooks;
+* SEH-exception hooks (Windows x64 only).
 
 Supported calling conventions:
 
