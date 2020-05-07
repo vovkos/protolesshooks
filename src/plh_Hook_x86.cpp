@@ -1,7 +1,16 @@
-﻿#include <stdint.h>
-#include <windows.h>
+﻿#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+
+#if (_WIN32)
+#	include <windows.h>
+#else
+#	include <unistd.h>
+#	include <sys/mman.h>
+#endif
 
 #include "protolesshooks.h"
+#include "plh_HookMgr.h"
 
 namespace plh {
 
@@ -75,7 +84,11 @@ struct Hook
 
 //..............................................................................
 
-__declspec(thread) uint32_t g_originalRet = 0;
+#if (_WIN32)
+__declspec(thread) HookMgr g_hookMgr;
+#else
+thread_local HookMgr g_hookMgr;
+#endif
 
 void
 hookEnter(
@@ -87,7 +100,7 @@ hookEnter(
 	if (hook->m_enterFunc)
 		hook->m_enterFunc(hook->m_targetFunc, hook->m_callbackParam, ebp);
 
-	g_originalRet = originalRet;
+	g_hookMgr.addFrame(ebp, originalRet);
 }
 
 uint32_t
@@ -100,7 +113,7 @@ hookLeave(
 	if (hook->m_leaveFunc)
 		hook->m_leaveFunc(hook->m_targetFunc, hook->m_callbackParam, ebp, eax);
 
-	return g_originalRet;
+	return g_hookMgr.removeFrame(ebp);
 }
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -113,6 +126,7 @@ allocateHook(
 	HookLeaveFunc* leaveFunc
 	)
 {
+#if (_WIN32)
 	Hook* hook = (Hook*)::VirtualAlloc(
 		NULL,
 		sizeof(Hook),
@@ -122,6 +136,17 @@ allocateHook(
 
 	if (!hook)
 		return NULL;
+#else
+	Hook* hook = (Hook*)malloc(sizeof(Hook));
+	if (!hook)
+		return NULL;
+
+	int pageSize = ::getpagesize();
+	size_t pageAddr = (size_t)hook& ~(pageSize - 1);
+	int result = ::mprotect((void*)pageAddr, pageSize, PROT_READ | PROT_WRITE | PROT_EXEC);
+	if (result != 0)
+		return NULL;
+#endif
 
 	memcpy(hook->m_thunkCode, g_thunkCode, sizeof(g_thunkCode));
 	*(void**)(hook->m_thunkCode + ThunkCodeOffset_HookPtr1) = hook;
@@ -141,7 +166,11 @@ allocateHook(
 void
 freeHook(Hook* hook)
 {
+#if (_WIN32)
 	::VirtualFree(hook, sizeof(Hook), MEM_RELEASE);
+#else
+	free(hook);
+#endif
 }
 
 //..............................................................................

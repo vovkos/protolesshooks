@@ -5,6 +5,7 @@
 #include <sys/mman.h>
 
 #include "protolesshooks.h"
+#include "plh_HookMgr.h"
 
 namespace plh {
 
@@ -107,7 +108,7 @@ struct Hook
 
 //..............................................................................
 
-thread_local uint64_t g_originalRet;
+thread_local HookMgr g_hookMgr;
 
 void
 hookEnter(
@@ -119,7 +120,7 @@ hookEnter(
 	if (hook->m_enterFunc)
 		hook->m_enterFunc(hook->m_targetFunc, hook->m_callbackParam, rbp);
 
-	g_originalRet = originalRet;
+	g_hookMgr.addFrame(rbp, originalRet);
 }
 
 uint64_t
@@ -132,7 +133,7 @@ hookLeave(
 	if (hook->m_leaveFunc)
 		hook->m_leaveFunc(hook->m_targetFunc, hook->m_callbackParam, rbp, rax);
 
-	return g_originalRet;
+	return g_hookMgr.removeFrame(rbp);
 }
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .

@@ -1,8 +1,10 @@
 ﻿#include <stdint.h>
 #include <windows.h>
 #include <assert.h>
+#include <unordered_map>
 
 #include "protolesshooks.h"
+#include "plh_HookMgr.h"
 
 //..............................................................................
 
@@ -252,7 +254,7 @@ dispatchException(
 
 //..............................................................................
 
-__declspec(thread) uint64_t g_originalRet;
+__declspec(thread) HookMgr g_hookMgr;
 
 void
 hookEnter(
@@ -264,7 +266,7 @@ hookEnter(
 	if (hook->m_enterFunc)
 		hook->m_enterFunc(hook->m_targetFunc, hook->m_callbackParam, rbp);
 
-	g_originalRet = originalRet;
+	g_hookMgr.addFrame(rbp, originalRet);
 }
 
 uint64_t
@@ -277,7 +279,7 @@ hookLeave(
 	if (hook->m_leaveFunc)
 		hook->m_leaveFunc(hook->m_targetFunc, hook->m_callbackParam, rbp, rax);
 
-	return g_originalRet;
+	return g_hookMgr.removeFrame(rbp);
 }
 
 uint64_t
@@ -300,14 +302,18 @@ hookException(
 			contextRecord
 			);
 
+	uint64_t originalRet = g_hookMgr.findOriginalRet(rbp);
+	if (!originalRet)
+		return -1; // crash and burn
+
 	bool result = dispatchException(
 		exceptionRecord,
 		contextRecord,
-		g_originalRet,
+		originalRet,
 		establisherFrame
 		);
 
-	return result ? NULL : g_originalRet; // returning NULL means ExceptionContinueExecution
+	return result ? 0 : originalRet; // returning NULL means ExceptionContinueExecution
 }
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .

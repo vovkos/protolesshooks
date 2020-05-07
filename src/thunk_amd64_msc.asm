@@ -64,6 +64,8 @@ thunk_entry:
 	mov     rax, targetFunc
 	jmp     rax
 
+hook_ret:
+
 	; rax now holds the original retval
 
 	; re-create our stack frame (compensating ret from targetFunc)

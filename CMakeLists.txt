@@ -13,7 +13,9 @@ if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	set_property(
 		CACHE TARGET_CPU
 		PROPERTY STRINGS
-		"" "amd64" "x86"
+		""
+		"amd64"
+		"x86"
 		)
 
 	if("${TARGET_CPU}" STREQUAL "")

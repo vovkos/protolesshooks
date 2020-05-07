@@ -44,6 +44,8 @@ thunk_entry:
 	mov     eax, targetFunc
 	jmp     eax
 
+hook_ret:
+
 	; eax now holds the original retval
 
 	; re-create our stack frame (compensating ret from targetFunc)
