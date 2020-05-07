@@ -39,4 +39,14 @@ add_library(
 	${SRC_LIST}
 	)
 
+install(
+	FILES ${PLH_INC_DIR}/protolesshooks.h
+	DESTINATION ${PLH_INSTALL_INC_SUBDIR}
+	)
+
+install(
+	TARGETS protolesshooks
+	DESTINATION ${PLH_INSTALL_LIB_SUBDIR}
+	)
+
 #...............................................................................
