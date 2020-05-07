@@ -57,7 +57,7 @@ fooHookEnter(
 	)
 {
 	printf(
-		"fooHookEnter(targetFunc: %p, callbackParam: %p, frameBase: %p)\n",
+		"fooHookEnter(func: %p, param: %p, frame: %p)\n",
 		targetFunc,
 		callbackParam,
 		(void*)frameBase
@@ -196,7 +196,7 @@ fooHookLeave(
 	)
 {
 	printf(
-		"fooHookLeave(targetFunc: %p, callbackParam: %p, frameBase: %p, returnValue: %zd/0x%zx)\n",
+		"fooHookLeave(func: %p, param: %p, frame: %p, retval: %zd/0x%zx)\n",
 		targetFunc,
 		callbackParam,
 		(void*)frameBase,
