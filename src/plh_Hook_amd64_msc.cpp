@@ -166,7 +166,7 @@ dispatchException(
 	currentContext.Rsp = rsp0;
 
 	uint64_t rspLimit = (uint64_t)((NT_TIB*)NtCurrentTeb())->StackBase;
-	for (size_t i = 0; currentContext.Rsp <= rspLimit; i++)
+	while (currentContext.Rsp <= rspLimit)
 	{
 		uint64_t imageBase;
 		RUNTIME_FUNCTION* function = ::RtlLookupFunctionEntry(currentContext.Rip, &imageBase, NULL);
@@ -174,7 +174,7 @@ dispatchException(
 		if (!function)
 		{
 			uint64_t retRip = *(uint64_t*)currentContext.Rsp;
-			if (currentContext.Rip == retRip) // broken stack (will cause infinite loop)
+			if (currentContext.Rip == retRip) // broken stack
 				break;
 
 			currentContext.Rip = retRip;
@@ -203,7 +203,7 @@ dispatchException(
 		if (handlerRsp >= currentContext.Rsp) // broken stack (rsp must grow)
 			break;
 
-		if (!exceptionRoutine || !i) // skip the first handler (it's us)
+		if (!exceptionRoutine)
 			continue;
 
 		PLH_DISPATCHER_CONTEXT dispatcherContext;
