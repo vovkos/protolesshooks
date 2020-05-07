@@ -11,7 +11,7 @@ Abstract
 
 The ``protolesshooks`` library provides a non-intrusive (non-trampoline) thunking technique capable of return address hijacking *without* the knowledge of target functions prototypes.
 
-This code is intended for use in the upcoming **API Spy** plugin for [IO Ninja](https://ioninja.com). API Spy is going to be an advanced cross-platform alternative for ``ltrace``.
+This code is intended for use in the upcoming **API Spy** plugin for `IO Ninja <https://ioninja.com>`__; API Spy is going to be an advanced cross-platform alternative for ``ltrace``.
 
 Overview
 --------
