@@ -9,7 +9,7 @@ namespace plh {
 class HookMgr
 {
 protected:
-	std::map<size_t, size_t> m_retMap;
+	std::map<size_t, size_t> m_frameMap;
 
 public:
 	void
