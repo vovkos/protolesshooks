@@ -149,6 +149,20 @@ HookLeaveFunc(
 	size_t returnValue
 	);
 
+#if (_PLH_CPP_MSC && _PLH_CPU_AMD64)
+
+typedef
+void
+HookExceptionFunc(
+	void* targetFunc,
+	void* callbackParam,
+	size_t frameBase,
+	EXCEPTION_RECORD* exception,
+	CONTEXT* context
+	);
+
+#endif
+
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 struct Hook;
@@ -164,6 +178,16 @@ allocateHook(
 void
 freeHook(Hook* hook);
 
+#if (_PLH_CPP_MSC && _PLH_CPU_AMD64)
+
+void
+setHookExceptionFunc(
+	Hook* hook,
+	HookExceptionFunc* exceptionFunc
+	);
+
+#endif
+
 //..............................................................................
 
-} // namespace plh {
+} // namespace plh

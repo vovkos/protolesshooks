@@ -144,6 +144,7 @@ struct Hook
 	void* m_callbackParam;
 	HookEnterFunc* m_enterFunc;
 	HookLeaveFunc* m_leaveFunc;
+	HookExceptionFunc* m_exceptionFunc;
 };
 
 //..............................................................................
@@ -203,7 +204,7 @@ dispatchException(
 		if (!exceptionRoutine || !i) // skip the first handler (it's us)
 			continue;
 
-	    PLH_DISPATCHER_CONTEXT dispatcherContext;
+		PLH_DISPATCHER_CONTEXT dispatcherContext;
 		dispatcherContext.ControlPc = handlerRip;
 		dispatcherContext.ImageBase = imageBase;
 		dispatcherContext.FunctionEntry = function;
@@ -287,6 +288,18 @@ hookException(
 	PLH_DISPATCHER_CONTEXT* dispatcherContext
 	)
 {
+	Hook* hook = CONTAINING_RECORD(dispatcherContext->HandlerData, Hook, m_exceptionHandlerParamPadding);
+	uint64_t rbp = establisherFrame - 2 * 8;
+
+	if (hook->m_exceptionFunc)
+		hook->m_exceptionFunc(
+			hook->m_targetFunc,
+			hook->m_callbackParam,
+			rbp,
+			exceptionRecord,
+			contextRecord
+			);
+
 	bool result = dispatchException(
 		exceptionRecord,
 		contextRecord,
@@ -342,6 +355,7 @@ allocateHook(
 	hook->m_callbackParam = callbackParam;
 	hook->m_enterFunc = enterFunc;
 	hook->m_leaveFunc = leaveFunc;
+	hook->m_exceptionFunc = NULL;
 
 	uint64_t baseAddress = (uint64_t)hook;
 	::RtlAddFunctionTable(&hook->m_runtimeFunction, 1, baseAddress);
@@ -352,6 +366,15 @@ void
 freeHook(Hook* hook)
 {
 	::VirtualFree(hook, sizeof(Hook), MEM_RELEASE);
+}
+
+void
+setHookExceptionFunc(
+	Hook* hook,
+	HookExceptionFunc* exceptionFunc
+	)
+{
+	hook->m_exceptionFunc = exceptionFunc;
 }
 
 //..............................................................................

@@ -15,7 +15,12 @@ bazHookEnter(
 	size_t frameBase
 	)
 {
-	printf("bazHookEnter(%p, '%s', %zx)\n", targetFunc, (char*)callbackParam, frameBase);
+	printf(
+		"bazHookEnter(func: %p, param: %s, frame: %p)\n",
+		targetFunc,
+		(char*)callbackParam,
+		(void*)frameBase
+		);
 }
 
 void
@@ -26,8 +31,36 @@ bazHookLeave(
 	size_t returnValue
 	)
 {
-	printf("bazHookLeave(%p, '%s', %zx)\n", targetFunc, (char*)callbackParam, frameBase);
+	printf(
+		"bazHookLeave(func: %p, param: %s, frame: %p)\n",
+		targetFunc,
+		(char*)callbackParam,
+		(void*)frameBase
+		);
 }
+
+#if (_PLH_CPU_AMD64)
+
+void
+bazHookException(
+	void* targetFunc,
+	void* callbackParam,
+	size_t frameBase,
+	EXCEPTION_RECORD* exception,
+	CONTEXT* context
+	)
+{
+	printf(
+		"bazHookException(func: %p, param: %s, frame: %p, error: %x, addr: %p)\n",
+		targetFunc,
+		(char*)callbackParam,
+		(void*)frameBase,
+		exception->ExceptionCode,
+		exception->ExceptionAddress
+		);
+}
+
+#endif
 
 //..............................................................................
 
@@ -123,6 +156,10 @@ main()
 		);
 
 	g_bazHook = plh::allocateHook(baz, "hook-param", bazHookEnter, bazHookLeave);
+
+#if (_PLH_CPU_AMD64)
+	plh::setHookExceptionFunc(g_bazHook, bazHookException);
+#endif
 
 	foo(false);
 	foo(true);
