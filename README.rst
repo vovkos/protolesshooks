@@ -22,22 +22,28 @@ The general idea of **API hooking** is to intercept calls to system or 3rd-party
 4. Inspect/modify function call arguments;
 5. Inspect/modify return values.
 
-Most hooking-related libraries, frameworks, and articles focus on *injection* techniques, i.e., the details of modifying the process' memory in order to make your hook called every time the process invokes the original function. Once this task is accomplished, the problem is deemed to be solved -- your hook can now proxy-call the original function, pass its return value back to the caller, and perform logging/argument/retval modification as necessary.
+Most hooking-related libraries, frameworks, and articles focus on *injection techniques*, i.e., the details of modifying the process' memory in order to make your hook called every time the process invokes the original function. Once this task is accomplished, the problem is deemed to be solved -- your hook can now proxy-call the original function, pass its return value back to the caller, and perform logging/argument/retval modification as necessary.
 
 The problem here, however, is that without the full knowledge of *target function prototypes* you can't proxy-call! It's easy to jump directly to the original function, yes -- and it allows creating a planar list of API calls (i.e. the capability (1) of the list above). But for (2), (3), and (5) your hook needs to *gain control back after return* from the target function -- which is trivial with the knowledge of target function prototypes, and quite challenging without. Not to state the obvious, but to encode prototypes for *all* the library calls in a process is nearly impossible -- there could be hundreds of different API calls, and some of those may be undocumented.
 
 The ``protolesshooks`` provides return-hijacking thunks which work *without* the knowledge of target functions prototypes. This makes it possible, for example, to enumerare and intercept *all shared libraries* in a process, gain a bird's-eye overview of the API call-graph, then gradually add prototype information for parameter/retval decoding as necessary.
 
-	A point worth mentioning is that with the presented method, the prototype information can be incomplete. For instance, we may have some clues about the first two parameters of a particular function, but no idea about the rest. With the traditional hooking (when your hook is inserted into the call chain), it's just not going to work unless you have *exact* information about the expected stack frame. With ``protolesshooks`` it's absolutely fine.
+	A point worth mentioning is that with the presented method, the prototype information can be incomplete. For instance, we may have some clues about the first two parameters of a particular function, but no idea about the rest. With the traditional hooking (when your hook is inserted into the call chain), it's just not going to work -- you need *exact information* about the expected stack frame! With ``protolesshooks`` it's absolutely fine.
 
-Calling conventions
------------------------------
+Features
+--------
 
-* Microsoft x64 (MSVC)
-* SystemV AMD64 (GCC/Clang)
-* x86 cdecl & stdcall (MSVC, GCC/Clang)
+* Function entry hook;
+* Function exit hook;
+* SEH exit hook (Windows x64 only).
 
-On Windows x64 thunks properly dispatch exceptions to lower SEH handlers, without losing the hook after the first exception. This is important, because multiple exceptions can occur without unwinding (if one of the SEH filters returns ``EXCEPTION_CONTINUE_EXECUTION``):
+Supported calling conventions:
+
+* Microsoft x64 (MSVC);
+* SystemV AMD64 (GCC/Clang);
+* x86 cdecl & stdcall (MSVC, GCC/Clang).
+
+On Windows x64 thunks properly dispatch exceptions to lower SEH handlers, without losing the hook after the first exception. This is important, because multiple exceptions can occur without unwinding (if one of the SEH filters returns ``EXCEPTION_CONTINUE_EXECUTION``), for example:
 
 .. code-block:: cpp
 
@@ -69,3 +75,4 @@ On Windows x64 thunks properly dispatch exceptions to lower SEH handlers, withou
 			// unrecoverable exception is caught here
 		}
 	}
+
