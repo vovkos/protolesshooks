@@ -90,17 +90,6 @@ fooHookEnter(
 	int q = plh::vaArg<int>(va);
 	double r = plh::vaArg<double>(va);
 
-	plh::vaEnd(va);
-
-	printf(
-		"  ("
-		"%d, %f, %d, %f, %d, %f, "
-		"%d, %f, %d, %f, %d, %f, "
-		"%d, %f, %d, %f, %d, %f)\n",
-		a, b, c, d, e, f,
-		g, h, i, j, k, l,
-		m, n, o, p, q, r
-		);
 #	elif (_PLH_CPP_GCC)
 	plh::RegArgBlock* regArgBlock = (plh::RegArgBlock*)(frameBase + plh::FrameOffset_RegArgBlock);
 
@@ -127,18 +116,6 @@ fooHookEnter(
 	int q = plh::vaArg<int>(va);
 	double r = plh::vaArg<double>(va);
 
-	plh::vaEnd(va);
-
-	printf(
-		"  ("
-		"%d, %f, %d, %f, %d, %f, "
-		"%d, %f, %d, %f, %d, %f, "
-		"%d, %f, %d, %f, %d, %f)\n",
-		a, b, c, d, e, f,
-		g, h, i, j, k, l,
-		m, n, o, p, q, r
-		);
-
 #	endif
 #elif (_PLH_CPU_X86)
 	plh::VaList va;
@@ -163,6 +140,8 @@ fooHookEnter(
 	int q = plh::vaArg<int>(va);
 	double r = plh::vaArg<double>(va);
 
+#endif
+
 	printf(
 		"  ("
 		"%d, %f, %d, %f, %d, %f, "
@@ -172,7 +151,6 @@ fooHookEnter(
 		g, h, i, j, k, l,
 		m, n, o, p, q, r
 		);
-#endif
 
 	assert(
 		a == 1 && b == 10.1 &&
