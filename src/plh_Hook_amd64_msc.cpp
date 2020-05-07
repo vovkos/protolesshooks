@@ -254,7 +254,7 @@ dispatchException(
 
 //..............................................................................
 
-__declspec(thread) HookMgr g_hookMgr;
+thread_local HookMgr g_hookMgr;
 
 void
 hookEnter(

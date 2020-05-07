@@ -84,11 +84,7 @@ struct Hook
 
 //..............................................................................
 
-#if (_WIN32)
-__declspec(thread) HookMgr g_hookMgr;
-#else
 thread_local HookMgr g_hookMgr;
-#endif
 
 void
 hookEnter(
