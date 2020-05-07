@@ -151,7 +151,7 @@ allocateHook(
 		return NULL;
 
 	int pageSize = ::getpagesize();
-	size_t pageAddr = (size_t)hook& ~(pageSize - 1);
+	size_t pageAddr = (size_t)hook & ~(pageSize - 1);
 	int result = ::mprotect((void*)pageAddr, pageSize, PROT_READ | PROT_WRITE | PROT_EXEC);
 	if (result != 0)
 		return NULL;
