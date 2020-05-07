@@ -11,6 +11,8 @@ Abstract
 
 The ``protolesshooks`` library provides a non-intrusive (non-trampoline) thunking technique capable of return address hijacking *without* the knowledge of target functions prototypes.
 
+This code is intended for use in the upcoming **API Spy** plugin for [IO Ninja](https://ioninja.com). API Spy is going to be an advanced cross-platform alternative for ``ltrace``.
+
 Overview
 --------
 
@@ -26,7 +28,7 @@ Most hooking-related libraries, frameworks, and articles focus on *injection tec
 
 The problem here, however, is that without the full knowledge of *target function prototypes* you can't proxy-call! It's easy to jump directly to the original function, yes -- and it allows creating a planar list of API calls (i.e. the capability (1) of the list above). But for (2), (3), and (5) your hook needs to *gain control back after return* from the target function -- which is trivial with the knowledge of target function prototypes, and quite challenging without. Not to state the obvious, but to encode prototypes for *all* the library calls in a process is nearly impossible -- there could be hundreds of different API calls, and some of those may be undocumented.
 
-The ``protolesshooks`` provides return-hijacking thunks which work *without* the knowledge of target functions prototypes. This makes it possible, for example, to enumerare and intercept *all shared libraries* in a process, gain a bird's-eye overview of the API call-graph, then gradually add prototype information for parameter/retval decoding as necessary.
+The ``protolesshooks`` library provides return-hijacking thunks which work *without* the knowledge of target functions prototypes. This makes it possible, for example, to enumerare and intercept *all shared libraries* in a process, gain a bird's-eye overview of the API call-graph, then gradually add prototype information for parameter/retval decoding as necessary.
 
 	A point worth mentioning is that with the presented method, the prototype information can be incomplete. For instance, we may have some clues about the first two parameters of a particular function, but no idea about the rest. With the traditional hooking (when your hook is inserted into the call chain), it's just not going to work -- you need *exact information* about the expected stack frame! With ``protolesshooks`` it's absolutely fine.
 
