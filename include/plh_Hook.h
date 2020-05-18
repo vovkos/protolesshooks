@@ -1,6 +1,7 @@
 #pragma once
 
 #include "plh_Def.h"
+#include <stddef.h>
 #include <stdint.h>
 
 #if (_PLH_OS_WIN)

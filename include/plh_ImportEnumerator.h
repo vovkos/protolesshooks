@@ -3,13 +3,10 @@
 #include "plh_ModuleEnumerator.h"
 #include <memory>
 
-#if (_WIN32)
+#if (_PLH_OS_WIN)
 #	include <vector>
 #	include <map>
-#elif (_AXL_OS_LINUX)
-#   include "axl_sys_psx_DynamicLib.h"
-#	include <link.h>
-
+#elif (_PLH_OS_LINUX)
 #	if (_PLH_CPU_X86)
 #	    define ELF_R_TYPE    ELF32_R_TYPE
 #	    define ELF_R_SYM     ELF32_R_SYM
@@ -103,7 +100,7 @@ protected:
 	reset();
 };
 
-#if (_WIN32)
+#if (_PLH_OS_WIN)
 
 //..............................................................................
 
@@ -204,11 +201,11 @@ protected:
 	readThunk();
 };
 
-#elif (_AXL_OS_LINUX)
+#elif (_PLH_OS_LINUX)
 
 //..............................................................................
 
-struct ElfImportEnumeration: ref::RefCount
+struct ElfImportEnumeration
 {
     char* m_moduleBase;
     ElfW(Sym)* m_symbolTable;
@@ -225,7 +222,7 @@ struct ElfImportEnumeration: ref::RefCount
 class ImportIterator: public ImportIteratorBase
 {
 protected:
-    ref::Ptr<ElfImportEnumeration> m_enumeration;
+    std::shared_ptr<ElfImportEnumeration> m_enumeration;
     size_t m_index;
 
 public:
@@ -234,7 +231,7 @@ public:
     	m_index = -1;
 	}
 
-	ImportIterator(ElfImportEnumeration* enumeration);
+	ImportIterator(std::shared_ptr<ElfImportEnumeration>&& enumeration);
 
     ImportIterator&
     operator ++ ();
@@ -247,9 +244,9 @@ protected:
 	readRel();
 };
 
-#elif (_AXL_OS_DARWIN)
+#elif (_PLH_OS_DARWIN)
 
-struct ImportEnumeration: ref::RefCount
+struct ImportEnumeration
 {
 	sl::Array<struct segment_command_64*> m_segmentArray;
 	sl::Array<const char*> m_dylibNameArray;
@@ -292,7 +289,7 @@ public:
 		init();
 	}
 
-	ImportIterator(ImportEnumeration* enumeration);
+	ImportIterator(std::shared_ptr<ImportEnumeration>&& enumeration);
 
 	ImportIterator&
 	operator ++ ();

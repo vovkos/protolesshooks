@@ -1,7 +1,10 @@
 #include "plh_ModuleEnumerator.h"
 #include <codecvt>
-#include <psapi.h>
 #include <assert.h>
+
+#if (_PLH_OS_WIN)
+#	include <psapi.h>
+#endif
 
 namespace plh {
 
@@ -26,13 +29,13 @@ ModuleIterator::operator ++ ()
 	return *this;
 }
 
-const std::string&
+const char*
 ModuleIterator::prepareModuleFileName() const
 {
 	assert(!m_moduleFileName.length());
 
 	if (m_index >= m_moduleArray.size())
-		return m_moduleFileName;
+		return NULL;
 
 	enum
 	{
@@ -45,7 +48,7 @@ ModuleIterator::prepareModuleFileName() const
 
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
 	m_moduleFileName = convert.to_bytes(fileName);
-	return m_moduleFileName;
+	return m_moduleFileName.c_str();
 }
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -78,7 +81,7 @@ enumerateModules(ModuleIterator* iterator)
 	return true;
 }
 
-#elif (__linux__)
+#elif (_PLH_OS_LINUX)
 
 ModuleIterator&
 ModuleIterator::operator ++ ()
@@ -86,13 +89,13 @@ ModuleIterator::operator ++ ()
 	if (m_linkMap)
 	{
 		m_linkMap = m_linkMap->l_next;
-		m_moduleFileName.clear();
+		m_moduleFileName = NULL;
 	}
 
 	return *this;
 }
 
-const sl::StringRef&
+const char*
 ModuleIterator::prepareModuleFileName() const
 {
 	if (!m_linkMap)
@@ -100,8 +103,8 @@ ModuleIterator::prepareModuleFileName() const
 
 	m_moduleFileName = m_linkMap->l_name;
 
-	if (m_moduleFileName.isEmpty())
-		m_moduleFileName = io::getExeFilePath();
+//	if (!m_moduleFileName)
+//		m_moduleFileName = io::getExeFilePath();
 
 	return m_moduleFileName;
 }
@@ -113,7 +116,7 @@ enumerateModules(ModuleIterator* iterator)
 	return true;
 }
 
-#elif (__APPLE__)
+#elif (_PLH_OS_DARWIN)
 
 ModuleIterator::ModuleIterator(size_t count)
 {

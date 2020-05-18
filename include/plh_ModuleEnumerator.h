@@ -1,19 +1,21 @@
 #pragma once
 
 #include "plh_Def.h"
+#include <vector>
 
 #if (_PLH_OS_WIN)
 #	include <windows.h>
+#elif (_PLH_OS_LINUX)
+#	include <link.h>
 #elif (_PLH_OS_DARWIN)
 #	include "plh_DynamicLib.h"
 #endif
-#include <vector>
 
 namespace plh {
 
 //..............................................................................
 
-#if (_WIN32)
+#if (_PLH_OS_WIN)
 
 class ModuleIterator
 {
@@ -47,24 +49,24 @@ public:
 		return m_index < m_moduleArray.size() ? m_moduleArray[m_index] : NULL;
 	}
 
-	const std::string&
+	const char*
 	getModuleFileName() const
 	{
-		return !m_moduleFileName.empty() ? m_moduleFileName : prepareModuleFileName();
+		return !m_moduleFileName.empty() ? m_moduleFileName.c_str() : prepareModuleFileName();
 	}
 
 protected:
-	const std::string&
+	const char*
 	prepareModuleFileName() const;
 };
 
-#elif (__linux__)
+#elif (_PLH_OS_LINUX)
 
 class ModuleIterator
 {
 protected:
-	mutable sl::StringRef m_moduleFileName;
-	struct link_map* m_linkMap;
+	mutable const char* m_moduleFileName;
+	link_map* m_linkMap;
 
 public:
 	ModuleIterator()
@@ -72,7 +74,7 @@ public:
 		m_linkMap = NULL;
 	}
 
-	ModuleIterator(struct link_map* linkMap)
+	ModuleIterator(link_map* linkMap)
 	{
 		m_linkMap = linkMap;
 	}
@@ -94,18 +96,18 @@ public:
 		return m_linkMap;
 	}
 
-	const sl::StringRef&
+	const char*
 	getModuleFileName() const
 	{
-		return !m_moduleFileName.isEmpty() ? m_moduleFileName : prepareModuleFileName();
+		return m_moduleFileName ? m_moduleFileName : prepareModuleFileName();
 	}
 
 protected:
-	const sl::StringRef&
+	const char*
 	prepareModuleFileName() const;
 };
 
-#elif (_AXL_OS_DARWIN)
+#elif (_PLH_OS_DARWIN)
 
 class ModuleIterator
 {

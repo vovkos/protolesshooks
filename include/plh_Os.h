@@ -1,10 +1,16 @@
 ﻿#pragma once
 
 #include "plh_Def.h"
+#include <stddef.h>
 #include <stdint.h>
 
 #if (_PLH_OS_WIN)
 #	include <windows.h>
+#else
+#	include <unistd.h>
+#	include <dlfcn.h>
+#	include <pthread.h>
+#	include <sys/mman.h>
 #endif
 
 
@@ -177,14 +183,13 @@ getTlsValue(size_t slot)
 }
 
 inline
-intptr_t
+bool
 setTlsValue(
 	size_t slot,
 	intptr_t value
 	)
 {
-	int result = ::pthread_setspecific((pthread_key_t)slot, (void*)value);
-	return result != 0 ? err::fail(result) : true;
+	return ::pthread_setspecific((pthread_key_t)slot, (void*)value) == 0;
 }
 
 #endif

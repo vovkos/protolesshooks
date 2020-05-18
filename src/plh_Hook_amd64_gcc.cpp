@@ -1,7 +1,7 @@
-﻿#include "pch.h"
-#include "plh_Hook.h"
+﻿#include "plh_Hook.h"
 #include "plh_HookCommon.h"
 #include "plh_ExecutableBlockArena.h"
+#include <string.h>
 
 namespace plh {
 
@@ -139,13 +139,13 @@ hookLeave(
 
 HookArena::HookArena()
 {
-	m_impl = AXL_MEM_NEW(mem::ExecutableBlockArena<Hook>);
+	m_impl = new ExecutableBlockArena<Hook>;
 }
 
 HookArena::~HookArena()
 {
-	((mem::ExecutableBlockArena<Hook>*)m_impl)->detach(); // don't free unless explicitly requested
-	AXL_MEM_DELETE((mem::ExecutableBlockArena<Hook>*)m_impl);
+	((ExecutableBlockArena<Hook>*)m_impl)->detach(); // don't free unless explicitly requested
+	delete (ExecutableBlockArena<Hook>*)m_impl;
 }
 
 Hook*
@@ -156,7 +156,7 @@ HookArena::allocate(
 	HookLeaveFunc* leaveFunc
 	)
 {
-	Hook* hook = ((mem::ExecutableBlockArena<Hook>*)m_impl)->allocate();
+	Hook* hook = ((ExecutableBlockArena<Hook>*)m_impl)->allocate();
 	if (!hook)
 		return NULL;
 
@@ -178,7 +178,7 @@ HookArena::allocate(
 void
 HookArena::free()
 {
-	((mem::ExecutableBlockArena<Hook>*)m_impl)->free();
+	((ExecutableBlockArena<Hook>*)m_impl)->free();
 }
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .

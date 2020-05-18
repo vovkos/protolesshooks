@@ -1,6 +1,7 @@
 #pragma once
 
 #include "plh_ModuleEnumerator.h"
+#include <stdint.h>
 
 namespace plh {
 

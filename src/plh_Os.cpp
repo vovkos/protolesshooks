@@ -29,12 +29,11 @@ DynamicLib::close()
 
 //..............................................................................
 
-inline
 size_t
 createDestructibleTlsSlot(TlsDestructFunc* destructFunc)
 {
-	pthread_key_y key;
-	int result = ::pthread_key_create(&key, destrcutFunc);
+	pthread_key_t key;
+	int result = ::pthread_key_create(&key, destructFunc);
 	return result == 0 ? (size_t)key : -1;
 }
 

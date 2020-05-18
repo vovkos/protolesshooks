@@ -12,6 +12,14 @@ target_link_libraries (
 	protolesshooks
 	)
 
+if (UNIX)
+	target_link_libraries (
+		test_main
+		pthread
+		dl
+		)
+endif()
+
 add_test(
 	NAME test_main
 	COMMAND test_main

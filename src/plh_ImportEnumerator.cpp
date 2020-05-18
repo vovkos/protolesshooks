@@ -4,8 +4,6 @@
 #if (_PLH_OS_WIN)
 #	include <windows.h>
 #	include <psapi.h>
-#elif (_PLH_OS_LINUX)
-#	include "plh_DynamicLib.h"
 #elif (_PLH_OS_DARWIN)
 #	include "plh_Leb128.h"
 #endif
@@ -358,7 +356,7 @@ enumerateImports(
 
 #elif (_PLH_OS_LINUX)
 
-ImportIterator::ImportIterator(ElfImportEnumeration* enumeration)
+ImportIterator::ImportIterator(std::shared_ptr<ElfImportEnumeration>&& enumeration)
 {
 	if (!enumeration)
 	{
@@ -389,7 +387,7 @@ ImportIterator::operator ++ ()
 bool
 ImportIterator::readRel()
 {
-	ASSERT(m_enumeration);
+	assert(m_enumeration && "attempt to read ElfRel from a null-iterator");
 
 	int relType;
 	ElfRel* rel;
@@ -422,7 +420,7 @@ ImportIterator::readRel()
 
 		if (sym->st_name >= m_enumeration->m_stringTableSize)
 		{
-			AXL_TRACE("WARNING: ImportIterator::readRel: symbol out of string table\n");
+			printf("WARNING: ImportIterator::readRel: symbol out of string table\n");
 			continue;
 		}
 
@@ -451,7 +449,7 @@ enumerateImports(
 	ElfW(Dyn)* dynTable[DT_NUM] = { 0 };
 	ElfW(Dyn)* dyn = linkMap->l_ld;
 	for (; dyn->d_tag; dyn++)
-		if (dyn->d_tag < countof(dynTable))
+		if (dyn->d_tag < DT_NUM)
 			dynTable[dyn->d_tag] = dyn;
 
 	// sanity check
@@ -465,10 +463,7 @@ enumerateImports(
 		!dynTable[DT_JMPREL] != !dynTable[DT_PLTRELSZ] ||
 		dynTable[DT_SYMENT]->d_un.d_val != sizeof(ElfW(Sym)) ||
 		dynTable[DT_GOT_RELENT] && dynTable[DT_GOT_RELENT]->d_un.d_val != sizeof(ElfRel))
-	{
-		err::setError("invalid ELF (missing or bad section(s))");
 		return false;
-	}
 
 	size_t pltRelCount = dynTable[DT_PLTRELSZ] ? dynTable[DT_PLTRELSZ]->d_un.d_val / sizeof(ElfRel) : 0;
 	size_t gotRelCount = dynTable[DT_GOT_RELSZ] ? dynTable[DT_GOT_RELSZ]->d_un.d_val / sizeof(ElfRel) : 0;
@@ -479,7 +474,7 @@ enumerateImports(
 		return true;
 	}
 
-	ref::Ptr<ElfImportEnumeration> enumeration = AXL_REF_NEW(ElfImportEnumeration);
+	std::shared_ptr<ElfImportEnumeration> enumeration = std::make_shared<ElfImportEnumeration>();
 	enumeration->m_moduleBase = (char*)linkMap->l_addr;
 	enumeration->m_symbolTable = (ElfW(Sym)*)dynTable[DT_SYMTAB]->d_un.d_ptr;
 	enumeration->m_stringTable = (char*)dynTable[DT_STRTAB]->d_un.d_ptr;
@@ -489,7 +484,7 @@ enumerateImports(
 	enumeration->m_gotRelTable = dynTable[DT_GOT_REL] ? (ElfRel*)dynTable[DT_GOT_REL]->d_un.d_ptr : NULL;
 	enumeration->m_gotRelCount = gotRelCount;
 
-	*iterator = ImportIterator(enumeration);
+	*iterator = ImportIterator(std::move(enumeration));
 	return true;
 }
 
@@ -843,7 +838,7 @@ enumerateImports(
 	size_t count = _dyld_image_count();
 	for (size_t i = 0; i < count; i++)
 	{
-		sys::psx::DynamicLib lib;
+		DynamicLib lib;
 		const char* imageName = _dyld_get_image_name(i);
 		bool result = lib.open(imageName, RTLD_NOLOAD);
 		if (result && lib == module)

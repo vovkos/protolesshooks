@@ -2,6 +2,10 @@
 #include "plh_ModuleEnumerator.h"
 #include "plh_Os.h"
 
+#if (_PLH_OS_LINUX)
+#	include <link.h>
+#endif
+
 namespace plh {
 
 //..............................................................................
@@ -89,7 +93,7 @@ disableImportWriteProtection(
 		size_t begin = moduleBase + phdr->p_vaddr;
 		size_t end = begin + phdr->p_memsz;
 
-		size_t pageSize = g::getModule()->getSystemInfo()->m_pageSize;
+		size_t pageSize = getPageSize();
 		begin &= ~(pageSize - 1);
 		end = (end + pageSize - 1) & ~(pageSize - 1);
 
@@ -98,7 +102,7 @@ disableImportWriteProtection(
 		backup->m_flags = phdr->p_flags;
 
 		int result = ::mprotect(backup->m_p, backup->m_size, PROT_READ | PROT_WRITE | PROT_EXEC);
-		return err::complete(result != -1);
+		return result != -1;
 	}
 
 	// GOT not found, still OK
@@ -136,7 +140,7 @@ restoreImportWriteProtection(const ImportWriteProtectionBackup* backup)
 		prot |= PROT_EXEC;
 
 	int result = ::mprotect(backup->m_p, backup->m_size, prot);
-	return err::complete(result != -1);
+	return result != -1;
 }
 
 #elif (_PLH_OS_DARWIN)

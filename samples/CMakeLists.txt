@@ -12,6 +12,14 @@ target_link_libraries (
 	protolesshooks
 	)
 
+if (UNIX)
+	target_link_libraries (
+		sample_trivial
+		pthread
+		dl
+		)
+endif()
+
 add_test(
 	NAME sample_trivial
 	COMMAND sample_trivial
@@ -28,6 +36,14 @@ target_link_libraries (
 	sample_params
 	protolesshooks
 	)
+
+if (UNIX)
+	target_link_libraries (
+		sample_params
+		pthread
+		dl
+		)
+endif()
 
 add_test(
 	NAME sample_params

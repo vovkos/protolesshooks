@@ -1,5 +1,6 @@
 ﻿#include "plh_ThreadState.h"
 #include "plh_Os.h"
+#include <limits.h>
 #include <atomic>
 #include <mutex>
 #include <assert.h>
@@ -8,7 +9,7 @@ namespace plh {
 
 //..............................................................................
 
-static volatile std::atomic<int> g_enableCount = 0;
+static volatile std::atomic<int> g_enableCount;
 static size_t g_threadDisableCountSlot = -1;
 static size_t g_threadStateSlot = -1;
 
@@ -47,7 +48,7 @@ void
 deleteThreadState(void* p)
 {
 	ThreadState* state = (ThreadState*)p;
-	assert(state && "null in TLS-destructor")
+	assert(state && "null in TLS-destructor");
 	delete state;
 }
 
