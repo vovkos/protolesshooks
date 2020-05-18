@@ -149,7 +149,7 @@ fooHookLeave(
 
 #if (_PLH_CPU_AMD64)
 	int returnValue = (int)regRetBlock->m_rax;
-#elif (_PLH_CPU_AMD64)
+#elif (_PLH_CPU_X86)
 	int returnValue = regRetBlock->m_eax;
 #endif
 
