@@ -1,10 +1,9 @@
-﻿#include <stdio.h>
+﻿#include "plh_Hook.h"
+#include <stdio.h>
 #include <stdint.h>
 
 #undef NDEBUG
 #include <assert.h>
-
-#include "protolesshooks.h"
 
 //..............................................................................
 
@@ -49,7 +48,7 @@ int foo(
 
 //..............................................................................
 
-void
+plh::HookAction
 fooHookEnter(
 	void* targetFunc,
 	void* callbackParam,
@@ -163,18 +162,27 @@ fooHookEnter(
 		o == 8 && p == 80.8 &&
 		q == 9 && r == 90.9
 		);
+
+	return plh::HookAction_Default;
 }
 
 void
 fooHookLeave(
 	void* targetFunc,
 	void* callbackParam,
-	size_t frameBase,
-	size_t returnValue
+	size_t frameBase
 	)
 {
+	plh::RegRetBlock* regRetBlock = (plh::RegRetBlock*)(frameBase + plh::FrameOffset_RegRetBlock);
+
+#if (_PLH_CPU_AMD64)
+	int returnValue = (int)regRetBlock->m_rax;
+#elif (_PLH_CPU_AMD64)
+	int returnValue = regRetBlock->m_eax;
+#endif
+
 	printf(
-		"fooHookLeave(func: %p, param: %p, frame: %p, retval: %zd/0x%zx)\n",
+		"fooHookLeave(func: %p, param: %p, frame: %p, retval: %d/0x%x)\n",
 		targetFunc,
 		callbackParam,
 		(void*)frameBase,
@@ -199,7 +207,9 @@ int main()
 		int, double
 		);
 
-	plh::Hook* fooHook = plh::allocateHook((void*)foo, (void*)0xabcdef, fooHookEnter, fooHookLeave);
+	plh::HookArena arena;
+	plh::Hook* fooHook = arena.allocate((void*)foo, (void*)0xabcdef, fooHookEnter, fooHookLeave);
+	plh::enableHooks();
 
 	((FooFunc*)fooHook)(
 		1, 10.1,
@@ -213,7 +223,6 @@ int main()
 		9, 90.9
 		);
 
-	plh::freeHook(fooHook);
 	return 0;
 }
 

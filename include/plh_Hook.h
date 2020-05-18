@@ -1,42 +1,10 @@
 #pragma once
 
+#include "plh_Def.h"
 #include <stdint.h>
-#include <stdarg.h>
 
-#if (_WIN32)
+#if (_PLH_OS_WIN)
 #	include <windows.h>
-#endif
-
-//..............................................................................
-
-// detect ABI
-
-#if (_MSC_VER)
-#	define _PLH_CPP_MSC 1
-#	if (defined _M_IX86)
-#		define _PLH_CPU_X86 1
-#	elif (defined _M_AMD64)
-#		define _PLH_CPU_AMD64 1
-#	elif (defined _M_ARM)
-#		define _PLH_CPU_ARM32 1
-#	elif (defined _M_ARM64)
-#		define _PLH_CPU_ARM64 1
-#	endif
-#elif (__GNUC__)
-#	define _PLH_CPP_GCC 1
-#	if defined __i386__
-#		define _PLH_CPU_X86 1
-#	elif (defined __amd64__)
-#		define _PLH_CPU_AMD64 1
-#	elif (defined __arm__)
-#		define _PLH_CPU_ARM32 1
-#	elif (defined __aarch64__)
-#		define _PLH_CPU_ARM64 1
-#	endif
-#endif
-
-#if (!_PLH_CPU_X86 && !_PLH_CPU_AMD64)
-#	error this ABI is not supported yet
 #endif
 
 namespace plh {
@@ -58,7 +26,20 @@ struct RegArgBlock
 	double m_xmm3[2];
 };
 
+struct RegRetBlock
+{
+	uint64_t m_rax;
+};
+
 #	elif (_PLH_CPP_GCC)
+
+struct RegRetBlock
+{
+	uint64_t m_rax;
+	uint64_t m_rdx;
+	double m_xmm0[2];
+	double m_xmm1[2];
+};
 
 struct RegArgBlock
 {
@@ -79,6 +60,13 @@ struct RegArgBlock
 };
 
 #	endif
+#elif (_PLH_CPU_X86)
+
+struct RegRetBlock
+{
+	uint32_t m_rax;
+};
+
 #endif
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -87,12 +75,15 @@ enum FrameOffset
 {
 #if (_PLH_CPU_X86)
 	FrameOffset_StackArgBlock = 8,
+	FrameOffset_RegRetBlock   = -(int)(sizeof(RegRetBlock) + 4),
 #elif (_PLH_CPU_AMD64)
 #	if (_PLH_CPP_MSC)
 	FrameOffset_RegArgBlock   = -(int)sizeof(RegArgBlock),
+	FrameOffset_RegRetBlock   = -(int)(sizeof(RegArgBlock) + sizeof(RegRetBlock) + 8),
 	FrameOffset_StackArgBlock = 16 + 8 * 4,
 #	elif (_PLH_CPP_GCC)
 	FrameOffset_RegArgBlock   = -(int)sizeof(RegArgBlock),
+	FrameOffset_RegRetBlock   = -(int)(sizeof(RegArgBlock) + sizeof(RegRetBlock)),
 	FrameOffset_StackArgBlock = 16,
 #	endif
 #endif
@@ -132,8 +123,17 @@ vaEnd(VaList& va)
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
+enum HookAction
+{
+	HookAction_Default    = 0,
+	HookAction_Return     = 0x01,
+	HookAction_JumpTarget = 0x02,
+};
+
+// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
 typedef
-void
+HookAction
 HookEnterFunc(
 	void* targetFunc,
 	void* callbackParam,
@@ -145,8 +145,7 @@ void
 HookLeaveFunc(
 	void* targetFunc,
 	void* callbackParam,
-	size_t frameBase,
-	size_t returnValue
+	size_t frameBase // if zero, it's an abandoned frame (due to SJLJ/SEH/thread-destruction/etc)
 	);
 
 #if (_PLH_CPP_MSC && _PLH_CPU_AMD64)
@@ -165,18 +164,39 @@ HookExceptionFunc(
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-struct Hook;
+struct Hook; // ABI-dependent
 
-Hook*
-allocateHook(
-	void* targetFunc,
-	void* callbackParam,
-	HookEnterFunc* enterFunc,
-	HookLeaveFunc* leaveFunc
-	);
+class HookArena
+{
+protected:
+	void* m_impl;
+
+public:
+	HookArena();
+	~HookArena(); // does NOT free allocated executable pages
+
+	Hook*
+	allocate(
+		void* targetFunc,
+		void* callbackParam,
+		HookEnterFunc* enterFunc,
+		HookLeaveFunc* leaveFunc
+		);
+
+	void
+	free(); // CAUTION: normally, you DO NOT WANT to ever unhook and free thunks
+};
+
+// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+// for trampoline-based hooking, we need to adjust targetFunc AFTER injection,
+// i.e. after a trampoline has been generated
 
 void
-freeHook(Hook* hook);
+setHookTargetFunc(
+	Hook* hook,
+	void* targetFunc
+	);
 
 #if (_PLH_CPP_MSC && _PLH_CPU_AMD64)
 
@@ -187,6 +207,20 @@ setHookExceptionFunc(
 	);
 
 #endif
+
+// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+void
+enableHooks();
+
+void
+disableHooks();
+
+void
+enableCurrentThreadHooks();
+
+void
+disableCurrentThreadHooks();
 
 //..............................................................................
 

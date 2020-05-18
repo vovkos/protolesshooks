@@ -1,14 +1,15 @@
-﻿#if (_WIN32)
+﻿#include "plh_Hook.h"
+#include <stdio.h>
+
+#if (_WIN32)
 #	include <windows.h>
 #endif
-#include <stdio.h>
-#include "protolesshooks.h"
 
 //..............................................................................
 
 plh::Hook* g_bazHook;
 
-void
+plh::HookAction
 bazHookEnter(
 	void* targetFunc,
 	void* callbackParam,
@@ -21,14 +22,15 @@ bazHookEnter(
 		(char*)callbackParam,
 		(void*)frameBase
 		);
+
+	return plh::HookAction_Default;
 }
 
 void
 bazHookLeave(
 	void* targetFunc,
 	void* callbackParam,
-	size_t frameBase,
-	size_t returnValue
+	size_t frameBase
 	)
 {
 	printf(
@@ -155,16 +157,20 @@ main()
 		PAGE_READONLY
 		);
 
-	g_bazHook = plh::allocateHook(baz, "hook-param", bazHookEnter, bazHookLeave);
+	plh::HookArena arena;
+	g_bazHook = arena.allocate(baz, "hook-param", bazHookEnter, bazHookLeave);
 
 #if (_PLH_CPU_AMD64)
 	plh::setHookExceptionFunc(g_bazHook, bazHookException);
 #endif
 
-	foo(false);
-	foo(true);
+	plh::enableHooks();
 
-	plh::freeHook(g_bazHook);
+	printf("without recovery...\n");
+	foo(false);
+
+	printf("\nnow with recovery...\n");
+	foo(true);
 
 	return 0;
 }

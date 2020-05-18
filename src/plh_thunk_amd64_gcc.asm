@@ -1,8 +1,14 @@
 section .text
 
-	; 6 gp regs + 8 xmm regs
+	; reg-ret-block: 2 gp regs + 2 xmm reg
+	; reg-arg-block: 6 gp regs + 8 xmm regs
 
-	STACK_FRAME_SIZE equ 6 * 8 + 8 * 16
+	RegRetBlockSize equ 2 * 8 + 2 * 16
+	RegArgBlockSize equ 6 * 8 + 8 * 16
+	StackFrameSize  equ RegRetBlockSize + RegArgBlockSize
+
+	HookAction_Return     equ 1
+	HookAction_JumpTarget equ 2
 
 	extern targetFunc
 	extern hook
@@ -16,7 +22,7 @@ thunk_entry:
 
 	push    rbp
 	mov     rbp, rsp
-	sub     rsp, STACK_FRAME_SIZE
+	sub     rsp, StackFrameSize
 
 	; save all arg registers (xmm must be 16-byte aligned)
 
@@ -43,6 +49,11 @@ thunk_entry:
 	mov     rax, hookEnter
 	call    rax
 
+	; rax now holds hook action
+
+	test    rax, HookAction_Return
+	jnz     ret_now
+
 	; restore all arg registers
 
 	movdqa  xmm7, [rbp - 16 * 1]
@@ -62,18 +73,35 @@ thunk_entry:
 
 	; undo prologue
 
-	add     rsp, STACK_FRAME_SIZE
+	add     rsp, StackFrameSize
 	pop     rbp
+
+	; skip the exit hook?
+
+	test    rax, HookAction_JumpTarget
+	jnz     jump_target
 
 	; replace return pointer
 
 	mov     rax, hookRet
 	mov     [rsp], rax
 
+jump_target:
+
 	; jump to target function
 
 	mov     rax, targetFunc
 	jmp     rax
+
+ret_now:
+
+	; grab retval regs from the reg-ret-block and return
+
+	movdqa  xmm1, [rbp - RegArgBlockSize - 16 * 1]
+	movdqa  xmm0, [rbp - RegArgBlockSize - 16 * 2]
+	mov     rdx,  [rbp - RegArgBlockSize - 16 * 2 - 8 * 1]
+	mov     rax,  [rbp - RegArgBlockSize - 16 * 2 - 8 * 2]
+	ret
 
 hook_ret:
 
@@ -84,11 +112,14 @@ hook_ret:
 	sub     rsp, 8  ; <<< hookRet
 	push    rbp
 	mov     rbp, rsp
-	sub     rsp, STACK_FRAME_SIZE
+	sub     rsp, StackFrameSize
 
 	; save the original retval
 
-	mov     [rbp - 8], rax
+	movdqa  [rbp - RegArgBlockSize - 16 * 1],         xmm1
+	movdqa  [rbp - RegArgBlockSize - 16 * 2],         xmm0
+	mov     [rbp - RegArgBlockSize - 16 * 2 - 8 * 1], rdx
+	mov     [rbp - RegArgBlockSize - 16 * 2 - 8 * 2], rax
 
 	; call the hook-leave function
 
@@ -100,13 +131,17 @@ hook_ret:
 
 	; rax now holds the original return pointer
 
-	; restore the original return pointer and retval
+	; restore the original return pointer and retval regs
 
 	mov     [rbp + 8], rax
-	mov     rax, [rbp - 8]
+
+	movdqa  xmm1, [rbp - RegArgBlockSize - 16 * 1]
+	movdqa  xmm0, [rbp - RegArgBlockSize - 16 * 2]
+	mov     rdx,  [rbp - RegArgBlockSize - 16 * 2 - 8 * 1]
+	mov     rax,  [rbp - RegArgBlockSize - 16 * 2 - 8 * 2]
 
 	; standard epilogue
 
-	add     rsp, STACK_FRAME_SIZE
+	add     rsp, StackFrameSize
 	pop     rbp
 	ret

@@ -1,8 +1,12 @@
 section .text
 
-	; 1 dword + padding
+	; reg-ret-block: 1 gp reg + padding
 
-	STACK_FRAME_SIZE equ 4 + 4
+	RegRetBlockSize equ 4 + 4
+	StackFrameSize  equ RegRetBlockSize
+
+	HookAction_Return     equ 1
+	HookAction_JumpTarget equ 2
 
 	extern targetFunc
 	extern hook
@@ -16,7 +20,7 @@ thunk_entry:
 
 	push    ebp
 	mov     ebp, esp
-	sub     esp, STACK_FRAME_SIZE
+	sub     esp, StackFrameSize
 
 	; call the hook-enter function
 
@@ -29,20 +33,39 @@ thunk_entry:
 	call    eax
 	add     esp, 16
 
+	; eax now holds hook action
+
+	test    eax, HookAction_Return
+	jnz     ret_now
+
 	; undo prologue
 
-	add     esp, STACK_FRAME_SIZE
+	add     esp, StackFrameSize
 	pop     ebp
+
+	; skip the exit hook?
+
+	test    eax, HookAction_JumpTarget
+	jnz     jump_target
 
 	; replace return pointer
 
 	mov     eax, hookRet
 	mov     [esp], eax
 
+jump_target:
+
 	; jump to target function
 
 	mov     eax, targetFunc
 	jmp     eax
+
+ret_now:
+
+	; grab rax from the reg-ret-block and return
+
+	mov     eax, [ebp - RegRetBlockSize]
+	ret
 
 hook_ret:
 
@@ -50,14 +73,14 @@ hook_ret:
 
 	; re-create our stack frame (compensating ret from targetFunc)
 
-	sub     esp, 4  ; <<< hook_ret
+	sub     esp, 4  ; <<< hookRet
 	push    ebp
 	mov     ebp, esp
-	sub     esp, STACK_FRAME_SIZE
+	sub     esp, StackFrameSize
 
 	; save the original retval
 
-	mov     [ebp - 4], eax
+	mov     [ebp - RegRetBlockSize], eax
 
 	; call the hook-leave function
 
@@ -74,10 +97,10 @@ hook_ret:
 	; restore the original return pointer and retval
 
 	mov     [ebp + 4], eax
-	mov     eax, [ebp - 4]
+	mov     eax, [ebp - RegRetBlockSize]
 
 	; standard epilogue
 
-	add     esp, STACK_FRAME_SIZE
+	add     esp, StackFrameSize
 	pop     ebp
 	ret
