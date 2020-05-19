@@ -52,11 +52,15 @@ fooHookLeave(
 		(void*)frameBase
 		);
 
-#if (_PLH_CPU_X86)
 	plh::RegRetBlock* regRetBlock = (plh::RegRetBlock*)(frameBase + plh::FrameOffset_RegRetBlock);
-	int returnValue = regRetBlock->m_eaxl;
-	printf("  -> %d\n", returnValue);
+
+#if (_PLH_CPU_AMD64)
+	int returnValue = (int)regRetBlock->m_rax;
+#elif (_PLH_CPU_X86)
+	int returnValue = regRetBlock->m_eax;
 #endif
+
+	printf("  -> %d\n", returnValue);
 }
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
