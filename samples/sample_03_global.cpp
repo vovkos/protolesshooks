@@ -94,6 +94,9 @@ hookLeave(
 const char*
 getFileName(const char* fileName)
 {
+	if (!fileName)
+		return "?";
+
 	for (const char* p = fileName; *p; p++)
 #if (_PLH_OS_WIN)
 		if (*p == '/' || *p == '\\')
