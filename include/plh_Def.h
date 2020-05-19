@@ -32,6 +32,8 @@
 #	error this ABI is not supported yet
 #endif
 
+// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
 // detect OS
 
 #ifdef _WIN32
@@ -43,6 +45,10 @@
 #else
 #	error this OS is not supported yet
 #endif
+
+// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+// compiler-agnostic defs for cdecl & stdcall
 
 #if (_PLH_CPP_MSC)
 #	define PLH_CDECL   __cdecl

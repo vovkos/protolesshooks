@@ -210,7 +210,7 @@ setTlsValue(
 
 //..............................................................................
 
-// OS-agnostic TID querying
+// OS-agnostic TID query
 
 inline
 uint64_t

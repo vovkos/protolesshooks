@@ -4,6 +4,7 @@
 #include "plh_Hook.h"
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 #include <string>
 #include <sstream>
 #include <list>
@@ -180,8 +181,8 @@ spyModule(
 		functionName += symbolName;
 
 		if (symbolName &&
-			(strcmp(symbolName == "pthread_getspecific") == 0 ||
-			strcmp(symbolName == "pthread_setspecific") == 0)
+			(strcmp(symbolName, "pthread_getspecific") == 0 ||
+			strcmp(symbolName, "pthread_setspecific") == 0)
 		{
 			printf("  skipping %s for now...\n", functionName.sz());
 			continue;
