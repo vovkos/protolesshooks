@@ -158,8 +158,8 @@ struct PeImportEnumeration
 class ImportIterator: public ImportIteratorBase
 {
 protected:
-	uint16_t m_ordinal;
-	uint16_t m_hint;
+	uint32_t m_ordinal;
+	uint32_t m_hint;
 
 	std::shared_ptr<PeImportEnumeration> m_enumeration;
 	std::shared_ptr<PeCodeMap> m_codeMap;
@@ -177,13 +177,13 @@ public:
 	ImportIterator
 	operator ++ (int);
 
-	uint16_t
+	uint32_t
 	getOrdinal()
 	{
 		return m_ordinal;
 	}
 
-	uint16_t
+	uint32_t
 	getHint()
 	{
 		return m_hint;
