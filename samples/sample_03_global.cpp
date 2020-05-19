@@ -3,7 +3,9 @@
 #include "plh_ImportWriteProtection.h"
 #include "plh_Hook.h"
 #include <stdio.h>
+#include <assert.h>
 #include <string>
+#include <sstream>
 #include <list>
 #include <unordered_map>
 
@@ -17,7 +19,7 @@ size_t g_indentSlot;
 int
 incrementIndent(int delta)
 {
-	int indent = plh::getTlsValue(g_indentSlot);
+	int indent = (int)plh::getTlsValue(g_indentSlot);
 	plh::setTlsValue(g_indentSlot, indent + delta);
 	return indent;
 }
@@ -88,6 +90,20 @@ hookLeave(
 		);
 }
 
+const char*
+getFileName(const char* fileName)
+{
+	for (const char* p = fileName; *p; p++)
+#if (_PLH_OS_WIN)
+		if (*p == '/' || *p == '\\')
+#else
+		if (*p == '/')
+#endif
+			fileName = p + 1;
+
+	return fileName;
+}
+
 bool
 spyModule(
 	const plh::ModuleIterator& moduleIt,
@@ -99,6 +115,8 @@ spyModule(
 #if (_TRACE_HOOKING_MODULE)
 	printf("Hooking %s...\n", moduleName);
 #endif
+
+	moduleName = getFileName(moduleName);
 
 #if (_PLH_OS_DARWIN)
 	std::unordered_map<size_t, bool> hookSet;
@@ -123,30 +141,47 @@ spyModule(
 		const char* symbolName = it.getSymbolName();
 
 #if (_PLH_OS_WIN)
-		functionName = moduleName + ":" + it.getModuleName() + ":";
+		std::ostringstream sstream;
+		sstream << moduleName;
+		sstream << ":";
+		sstream << it.getModuleName();
+		sstream << ":";
 
-		if (it.getOrdinal() != -1)
-			functionName.appendFormat("@%d", it.getOrdinal());
-		else
-			functionName += it.getSymbolName();
-
-		if (it.getSymbolName() == "TlsGetValue" ||
-			it.getSymbolName() == "TlsSetValue")
+		if (it.getOrdinal() == -1)
 		{
-			printf("  skipping %s for now...\n", functionName.sz());
+			sstream << symbolName;
+		}
+		else
+		{
+			sstream << "@";
+			sstream << it.getOrdinal();
+		}
+
+		functionName = sstream.str();
+
+		if (symbolName &&
+			(strcmp(symbolName, "TlsGetValue") == 0 ||
+			strcmp(symbolName, "TlsSetValue") == 0))
+		{
+			printf("  skipping %s for now...\n", functionName.c_str());
 			continue;
 		}
 
 		void** slot = it.getSlot();
 		void* targetFunc = *slot;
-		plh::Hook* hook = hookArena->allocate(targetFunc, functionName.p(), hookEnter, hookLeave);
+		plh::Hook* hook = hookArena->allocate(targetFunc, (void*)functionName.c_str(), hookEnter, hookLeave);
 #	if (_TRACE_HOOKING_FUNCTION)
-		printf("  hooking [%p] %p -> %p %s...\n", slot, targetFunc, hook, functionName.sz());
+		printf("  hooking [%p] %p -> %p %s...\n", slot, targetFunc, hook, functionName.c_str());
 #	endif
 		*slot = hook;
 #elif (_PLH_OS_LINUX)
-		if (it.getSymbolName() == "pthread_getspecific" ||
-			it.getSymbolName() == "pthread_setspecific")
+		functionName = moduleName;
+		functionName += ":";
+		functionName += symbolName;
+
+		if (symbolName &&
+			(strcmp(symbolName == "pthread_getspecific") == 0 ||
+			strcmp(symbolName == "pthread_setspecific") == 0)
 		{
 			printf("  skipping %s for now...\n", functionName.sz());
 			continue;
@@ -154,24 +189,21 @@ spyModule(
 
 		void** slot = it.getSlot();
 		void* targetFunc = *slot;
-		plh::Hook* hook = hookArena->allocate(targetFunc, functionName.p(), hookEnter, hookLeave);
+		plh::Hook* hook = hookArena->allocate(targetFunc, (void*)functionName.c_str(), hookEnter, hookLeave);
 #	if (_TRACE_HOOKING_FUNCTION)
-		printf(
-			"  hooking [%p] %p -> %p %s...\n",
-			slot,
-			targetFunc,
-			hook,
-			functionName.sz()
-		);
+		printf("  hooking [%p] %p -> %p %s...\n", slot, targetFunc, hook, functionName.c_str());
 #	endif
 		*slot = hook;
 #elif (_PLH_OS_DARWIN)
 		functionName = moduleName;
 		functionName += ":";
+		functionName += getFileName(it.getModuleName());
+		functionName += ":";
 		functionName += symbolName;
 
-		if (strcmp(symbolName, "_pthread_getspecific") == 0 ||
-			strcmp(symbolName, "_pthread_setspecific") == 0)
+		if (symbolName &&
+			(strcmp(symbolName, "_pthread_getspecific") == 0 ||
+			strcmp(symbolName, "_pthread_setspecific") == 0))
 		{
 			printf("  skipping %s for now...\n", functionName.c_str());
 			continue;
