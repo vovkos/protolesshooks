@@ -149,7 +149,7 @@ getCurrentThreadState(bool createIfNotExists)
 ThreadState::~ThreadState()
 {
 	restoreOriginalRets();
-	cleanup(std::map<size_t, Frame>::iterator());
+	cleanup(m_frameMap.end());
 }
 
 void
