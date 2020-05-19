@@ -18,7 +18,7 @@ ImportIteratorBase::reset()
 {
 	m_symbolName = NULL;
 	m_moduleName = NULL;
-    m_slot = NULL;
+	m_slot = NULL;
 }
 
 //..............................................................................
@@ -207,7 +207,7 @@ PeCodeMap::getModuleCodeMap(size_t address)
 ImportIterator::ImportIterator()
 {
 	m_ordinal = -1;
-    m_importDescIdx = -1;
+	m_importDescIdx = -1;
 	m_nameThunk = NULL;
 	m_addrThunk = NULL;
 }
@@ -295,7 +295,7 @@ ImportIterator::readThunk()
 			IMAGE_IMPORT_BY_NAME* name = (IMAGE_IMPORT_BY_NAME*)(m_enumeration->m_moduleBase + m_nameThunk->u1.AddressOfData);
 			m_ordinal = -1;
 			m_hint = name->Hint;
-			m_symbolName = name->Name;
+			m_symbolName = (char*)name->Name;
 		}
 
 		if (!isCode(m_addrThunk->u1.Function))
@@ -324,7 +324,7 @@ ImportIterator::readThunk()
 bool
 enumerateImports(
 	ImportIterator* iterator,
-    void* module
+	void* module
 	)
 {
 	if (!module)
