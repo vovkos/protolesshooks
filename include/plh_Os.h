@@ -184,6 +184,10 @@ createTlsSlot()
 	return createDestructibleTlsSlot(NULL);
 }
 
+// static inline helps avoiding weak-linkage by clang on macOS;
+// these two functions should never be hooked in the usual way!
+
+static
 inline
 intptr_t
 getTlsValue(size_t slot)
@@ -191,6 +195,7 @@ getTlsValue(size_t slot)
 	return (intptr_t)::pthread_getspecific((pthread_key_t)slot);
 }
 
+static
 inline
 bool
 setTlsValue(
@@ -202,6 +207,21 @@ setTlsValue(
 }
 
 #endif
+
+//..............................................................................
+
+// OS-agnostic TID querying
+
+inline
+uint64_t
+getCurrentThreadId()
+{
+#if (_PLH_OS_WIN)
+	return ::GetCurrentThreadId();
+#else
+	return (uint64_t)::pthread_self();
+#endif
+}
 
 //..............................................................................
 
