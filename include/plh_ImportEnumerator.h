@@ -53,6 +53,8 @@ typedef ElfW(Rela) ElfRel;
 	typedef ElfW(Rel) ElfRel;
 
 #	endif
+#elif (_PLH_OS_DARWIN)
+#	include <mach-o/dyld.h>
 #endif
 
 namespace plh {
@@ -248,11 +250,11 @@ protected:
 
 struct ImportEnumeration
 {
-	sl::Array<struct segment_command_64*> m_segmentArray;
-	sl::Array<const char*> m_dylibNameArray;
+	std::vector<segment_command_64*> m_segmentArray;
+	std::vector<const char*> m_dylibNameArray;
 	char* m_slide;
 	char* m_linkEditSegmentBase;
-	struct dyld_info_command* m_dyldInfoCmd;
+	dyld_info_command* m_dyldInfoCmd;
 };
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -271,11 +273,11 @@ protected:
 
 protected:
 	size_t m_slotVmAddr;
-	sl::StringRef m_segmentName;
-	sl::StringRef m_sectionName;
+	const char* m_segmentName;
+	const char* m_sectionName;
 
-	ref::Ptr<ImportEnumeration> m_enumeration;
-	sl::Array<size_t> m_pendingSlotArray; // from BIND_OPCODE_DO_BIND_ULEB_TIMES_SKIPPING_ULEB
+	std::shared_ptr<ImportEnumeration> m_enumeration;
+	std::vector<size_t> m_pendingSlotArray; // from BIND_OPCODE_DO_BIND_ULEB_TIMES_SKIPPING_ULEB
 	State m_state;
 	const char* m_p;
 	const char* m_begin;
@@ -297,13 +299,13 @@ public:
 	ImportIterator
 	operator ++ (int);
 
-	const sl::StringRef&
+	const char*
 	getSegmentName() const
 	{
 		return m_segmentName;
 	}
 
-	const sl::StringRef&
+	const char*
 	getSectionName() const
 	{
 		return m_sectionName;
@@ -334,7 +336,7 @@ protected:
 		size_t slotVmAddr
 		);
 
-	sl::StringRef
+	const char*
 	getDylibName(int ordinal);
 };
 

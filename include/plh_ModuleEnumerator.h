@@ -1,14 +1,12 @@
 #pragma once
 
-#include "plh_Def.h"
+#include "plh_Os.h"
 #include <vector>
 
 #if (_PLH_OS_WIN)
 #	include <windows.h>
 #elif (_PLH_OS_LINUX)
 #	include <link.h>
-#elif (_PLH_OS_DARWIN)
-#	include "plh_DynamicLib.h"
 #endif
 
 namespace plh {
@@ -71,11 +69,13 @@ protected:
 public:
 	ModuleIterator()
 	{
+		m_moduleFileName = NULL;
 		m_linkMap = NULL;
 	}
 
 	ModuleIterator(link_map* linkMap)
 	{
+		m_moduleFileName = NULL;
 		m_linkMap = linkMap;
 	}
 
@@ -113,7 +113,7 @@ class ModuleIterator
 {
 protected:
 	mutable DynamicLib m_module;
-	mutable sl::StringRef m_moduleFileName;
+	mutable const char* m_moduleFileName;
 	size_t m_count;
 	size_t m_index;
 
@@ -137,10 +137,10 @@ public:
 		return m_module.isOpen() ? (void*)m_module : prepareModule();
 	}
 
-	const sl::StringRef&
+	const char*
 	getModuleFileName() const
 	{
-		return !m_moduleFileName.isEmpty() ? m_moduleFileName : prepareModuleFileName();
+		return m_moduleFileName ? m_moduleFileName : prepareModuleFileName();
 	}
 
 	size_t
@@ -153,7 +153,7 @@ protected:
 	void*
 	prepareModule() const;
 
-	const sl::StringRef&
+	const char*
 	prepareModuleFileName() const;
 };
 

@@ -36,6 +36,17 @@ public:
 		close();
 	}
 
+	operator void* ()
+	{
+		return m_module;
+	}
+
+	bool
+	isOpen()
+	{
+		return m_module != NULL;
+	}
+
 	bool
 	open(
 		const char* fileName,

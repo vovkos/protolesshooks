@@ -6,6 +6,7 @@
 #	include <psapi.h>
 #elif (_PLH_OS_DARWIN)
 #	include "plh_Leb128.h"
+#	include <mach-o/loader.h>
 #endif
 
 namespace plh {
@@ -499,7 +500,7 @@ enumerateImports(
 
 #elif (_PLH_OS_DARWIN)
 
-ImportIterator::ImportIterator(ImportEnumeration* enumeration)
+ImportIterator::ImportIterator(std::shared_ptr<ImportEnumeration>&& enumeration)
 {
 	init();
 	m_enumeration = enumeration;
@@ -509,6 +510,9 @@ ImportIterator::ImportIterator(ImportEnumeration* enumeration)
 void
 ImportIterator::init()
 {
+	m_slotVmAddr = 0;
+	m_segmentName = NULL;
+	m_sectionName = NULL;
 	m_state = State_Idle;
 	m_p = NULL;
 	m_end = NULL;
@@ -536,9 +540,10 @@ ImportIterator::next()
 {
 	m_slot = NULL;
 
-	while (!m_pendingSlotArray.isEmpty())
+	while (!m_pendingSlotArray.empty())
 	{
-		size_t slotVmAddr = m_pendingSlotArray.getBackAndPop();
+		size_t slotVmAddr = m_pendingSlotArray.back();
+		m_pendingSlotArray.pop_back();
 		setSlot(slotVmAddr);
 		if (m_slot)
 			return true;
@@ -572,7 +577,7 @@ ImportIterator::next()
 				break;
 
 			case BIND_OPCODE_SET_DYLIB_ORDINAL_ULEB:
-				m_p += enc::uleb128(m_p, m_end - m_p, &uleb);
+				m_p += uleb128(m_p, m_end - m_p, &uleb);
 				m_moduleName = getDylibName(uleb);
 				break;
 
@@ -582,24 +587,24 @@ ImportIterator::next()
 
 			case BIND_OPCODE_SET_SYMBOL_TRAILING_FLAGS_IMM:
 				m_symbolName = m_p;
-				m_p += m_symbolName.getLength() + 1;
+				m_p += strlen(m_p) + 1;
 				break;
 
 			case BIND_OPCODE_SET_TYPE_IMM:
 				break;
 
 			case BIND_OPCODE_SET_ADDEND_SLEB:
-				m_p += enc::sleb128(m_p, m_end - m_p, &sleb);
+				m_p += sleb128(m_p, m_end - m_p, &sleb);
 				break;
 
 			case BIND_OPCODE_SET_SEGMENT_AND_OFFSET_ULEB:
-				m_p += enc::uleb128(m_p, m_end - m_p, &uleb);
+				m_p += uleb128(m_p, m_end - m_p, &uleb);
 				m_segmentIdx = imm;
 				m_segmentOffset = uleb;
 				break;
 
 			case BIND_OPCODE_ADD_ADDR_ULEB:
-				m_p += enc::uleb128(m_p, m_end - m_p, &uleb);
+				m_p += uleb128(m_p, m_end - m_p, &uleb);
 				m_segmentOffset += uleb;
 				break;
 
@@ -609,7 +614,7 @@ ImportIterator::next()
 				break;
 
 			case BIND_OPCODE_DO_BIND_ADD_ADDR_ULEB:
-				m_p += enc::uleb128(m_p, m_end - m_p, &uleb);
+				m_p += uleb128(m_p, m_end - m_p, &uleb);
 				bind();
 				m_segmentOffset += uleb + bindOffsetDelta;
 				break;
@@ -620,8 +625,8 @@ ImportIterator::next()
 				break;
 
 			case BIND_OPCODE_DO_BIND_ULEB_TIMES_SKIPPING_ULEB:
-				m_p += enc::uleb128(m_p, m_end - m_p, &uleb);
-				m_p += enc::uleb128(m_p, m_end - m_p, &skip);
+				m_p += uleb128(m_p, m_end - m_p, &uleb);
+				m_p += uleb128(m_p, m_end - m_p, &skip);
 				skip += bindOffsetDelta;
 
 				for (uint64_t i = 0; i < uleb; i++)
@@ -633,7 +638,7 @@ ImportIterator::next()
 				break;
 
 			default:
-				AXL_TRACE("WARNING: unexpected bind op: 0x%02x\n", op);
+				printf("WARNING: unexpected bind op: 0x%02x\n", op);
 			}
 		}
 
@@ -665,19 +670,23 @@ ImportIterator::next()
 		case State_LazyBind:
 			m_state = State_Done;
 			break;
+
+		default:
+			assert(false && "invalid state inside the 'next' loop");
+			break;
 		}
 
 		m_p = m_begin;
 	} while (m_state != State_Done);
 
-	ASSERT(!m_slot);
+	assert(!m_slot && "at the end of binding info with a non-null slot");
 	return false;
 }
 
 bool
 ImportIterator::bind()
 {
-	if (m_segmentIdx >= m_enumeration->m_segmentArray.getCount())
+	if (m_segmentIdx >= m_enumeration->m_segmentArray.size())
 		return false;
 
 	const segment_command_64* segment = m_enumeration->m_segmentArray[m_segmentIdx];
@@ -693,14 +702,14 @@ ImportIterator::bind()
 		return m_slot != NULL;
 	}
 
-	m_pendingSlotArray.append(slotVmAddr);
+	m_pendingSlotArray.push_back(slotVmAddr);
 	return true;
 }
 
 bool
 ImportIterator::setSlot(size_t slotVmAddr)
 {
-	ASSERT(m_segmentIdx < m_enumeration->m_segmentArray.getCount());
+	assert(m_segmentIdx < m_enumeration->m_segmentArray.size() && "segment index out-of-bounds");
 	const segment_command_64* segment = m_enumeration->m_segmentArray[m_segmentIdx];
 
 	const section_64* section = findSection(segment, slotVmAddr);
@@ -732,7 +741,7 @@ ImportIterator::findSection(
 	return NULL;
 }
 
-sl::StringRef
+const char*
 ImportIterator::getDylibName(int ordinal)
 {
 	switch (ordinal)
@@ -749,7 +758,7 @@ ImportIterator::getDylibName(int ordinal)
 
 	return
 		ordinal < 0 ? "unknown-special-ordinal" :
-		ordinal <= m_enumeration->m_dylibNameArray.getCount() ? m_enumeration->m_dylibNameArray[ordinal - 1] :
+		ordinal <= m_enumeration->m_dylibNameArray.size() ? m_enumeration->m_dylibNameArray[ordinal - 1] :
 		"dylib-index-out-of-range";
 }
 
@@ -764,13 +773,13 @@ enumerateImports(
 	char* slide = (char*)::_dyld_get_image_vmaddr_slide(imageIndex);
 	mach_header_64* machHdr = (mach_header_64*)::_dyld_get_image_header(imageIndex);
 
-	sl::Array<struct segment_command_64*> segmentArray;
-	sl::Array<const char*> dylibNameArray;
+	std::vector<struct segment_command_64*> segmentArray;
+	std::vector<const char*> dylibNameArray;
 	segment_command_64* linkEditSegmentCmd = NULL;
 	dyld_info_command* dyldInfoCmd = NULL;
 
 	load_command* cmd = (load_command*)(machHdr + 1);
-	for (uint_t i = 0; i < machHdr->ncmds; i++)
+	for (size_t i = 0; i < machHdr->ncmds; i++)
 	{
 		segment_command_64* segmentCmd;
 		dylib_command* dylibCmd;
@@ -782,12 +791,12 @@ enumerateImports(
 		case LC_LOAD_UPWARD_DYLIB:
 		case LC_LAZY_LOAD_DYLIB:
 			dylibCmd = (dylib_command*)cmd;
-			dylibNameArray.append((char*)cmd + dylibCmd->dylib.name.offset);
+			dylibNameArray.push_back((char*)cmd + dylibCmd->dylib.name.offset);
 			break;
 
 		case LC_SEGMENT_64:
 			segmentCmd = (segment_command_64*)cmd;
-			segmentArray.append(segmentCmd);
+			segmentArray.push_back(segmentCmd);
 
 			if (strcmp(segmentCmd->segname, "__LINKEDIT") == 0)
 				linkEditSegmentCmd = segmentCmd;
@@ -803,19 +812,16 @@ enumerateImports(
 	}
 
 	if (!linkEditSegmentCmd || !dyldInfoCmd)
-	{
-		err::setError("invalid MACH-O file");
 		return false;
-	}
 
-	ref::Ptr<ImportEnumeration> enumeration = AXL_REF_NEW(ImportEnumeration);
+	std::shared_ptr<ImportEnumeration> enumeration = std::make_shared<ImportEnumeration>();
 	enumeration->m_segmentArray = segmentArray;
 	enumeration->m_dylibNameArray = dylibNameArray;
 	enumeration->m_slide = slide;
 	enumeration->m_linkEditSegmentBase = slide + linkEditSegmentCmd->vmaddr - linkEditSegmentCmd->fileoff;
 	enumeration->m_dyldInfoCmd = dyldInfoCmd;
 
-	*iterator = ImportIterator(enumeration);
+	*iterator = ImportIterator(std::move(enumeration));
 	return true;
 }
 
@@ -845,7 +851,6 @@ enumerateImports(
 			return enumerateImports(iterator, i);
 	}
 
-	err::setError("module not found");
 	return false;
 }
 

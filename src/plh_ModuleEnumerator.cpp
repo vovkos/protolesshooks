@@ -4,6 +4,8 @@
 
 #if (_PLH_OS_WIN)
 #	include <psapi.h>
+#elif (_PLH_OS_DARWIN)
+#	include <mach-o/dyld.h>
 #endif
 
 namespace plh {
@@ -102,10 +104,14 @@ ModuleIterator::prepareModuleFileName() const
 		return m_moduleFileName;
 
 	m_moduleFileName = m_linkMap->l_name;
+	if (m_moduleFileName)
+		return m_moduleFileName;
 
-//	if (!m_moduleFileName)
-//		m_moduleFileName = io::getExeFilePath();
+	static char exeFilePath[PATH_MAX] = { 0 };
+	if (!exeFilePath[0])
+		::readlink("/proc/self/exe", exeFilePath, sizeof(exeFilePath) - 1);
 
+	m_moduleFileName = exeFilePath;
 	return m_moduleFileName;
 }
 
@@ -120,6 +126,7 @@ enumerateModules(ModuleIterator* iterator)
 
 ModuleIterator::ModuleIterator(size_t count)
 {
+	m_moduleFileName = NULL;
 	m_count = count;
 	m_index = 0;
 }
@@ -131,25 +138,25 @@ ModuleIterator::operator ++ ()
 		return *this;
 
 	m_index++;
-	m_moduleFileName.clear();
+	m_moduleFileName = NULL;
 	return *this;
 }
 
 void*
 ModuleIterator::prepareModule() const
 {
-	ASSERT(!m_module.isOpen());
+	assert(!m_module.isOpen() && "module handle is already set");
 
 	if (m_index < m_count)
-		m_module.open(getModuleFileName());
+		m_module.open(getModuleFileName(), RTLD_NOLOAD);
 
 	return m_module;
 }
 
-const sl::StringRef&
+const char*
 ModuleIterator::prepareModuleFileName() const
 {
-	ASSERT(m_moduleFileName.isEmpty());
+	assert(!m_moduleFileName && "module file name is already set");
 
 	if (m_index < m_count)
 		m_moduleFileName = ::_dyld_get_image_name(m_index);

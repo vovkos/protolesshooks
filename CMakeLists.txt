@@ -37,20 +37,20 @@ if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	elseif("${TARGET_CPU}" STREQUAL "amd64")
 		set(CMAKE_SIZEOF_VOID_P 8)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -mcx16")
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -m64 -mcx16")
 
 		set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS TRUE)
 		set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB32_PATHS FALSE)
 	elseif("${TARGET_CPU}" STREQUAL "x86")
 		set(CMAKE_SIZEOF_VOID_P 4)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32")
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -m32")
 
 		set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS FALSE)
 		set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB32_PATHS TRUE)
 	else()
 		message(FATAL_ERROR "Unsupported CPU: ${TARGET_CPU}")
 	endif()
+
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
 #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
