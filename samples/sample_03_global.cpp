@@ -182,9 +182,9 @@ spyModule(
 
 		if (symbolName &&
 			(strcmp(symbolName, "pthread_getspecific") == 0 ||
-			strcmp(symbolName, "pthread_setspecific") == 0)
+			strcmp(symbolName, "pthread_setspecific") == 0))
 		{
-			printf("  skipping %s for now...\n", functionName.sz());
+			printf("  skipping %s for now...\n", functionName.c_str());
 			continue;
 		}
 
