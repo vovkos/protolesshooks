@@ -508,14 +508,22 @@ ImportIterator::ImportIterator(std::shared_ptr<ImportEnumeration>&& enumeration)
 }
 
 void
-ImportIterator::init()
+ImportIterator::setState(
+	State state,
+	const char* begin,
+	size_t size
+	)
 {
+	m_state = state;
+	m_slot = NULL;
 	m_slotVmAddr = 0;
+	m_moduleName = NULL;
+	m_symbolName = NULL;
 	m_segmentName = NULL;
 	m_sectionName = NULL;
-	m_state = State_Idle;
-	m_p = NULL;
-	m_end = NULL;
+	m_begin = begin;
+	m_end = begin + size;
+	m_p = begin;
 	m_segmentIdx = 0;
 	m_segmentOffset = 0;
 }
@@ -650,25 +658,31 @@ ImportIterator::next()
 		switch (m_state)
 		{
 		case State_Idle:
-			m_state = State_Bind;
-			m_begin = m_enumeration->m_linkEditSegmentBase + m_enumeration->m_dyldInfoCmd->bind_off;
-			m_end = m_begin + m_enumeration->m_dyldInfoCmd->bind_size;
+			setState(
+				State_Bind,
+				m_enumeration->m_linkEditSegmentBase + m_enumeration->m_dyldInfoCmd->bind_off,
+				m_enumeration->m_dyldInfoCmd->bind_size
+				);
 			break;
 
 		case State_Bind:
-			m_state = State_WeakBind;
-			m_begin = m_enumeration->m_linkEditSegmentBase + m_enumeration->m_dyldInfoCmd->weak_bind_off;
-			m_end = m_begin + m_enumeration->m_dyldInfoCmd->weak_bind_size;
+			setState(
+				State_WeakBind,
+				m_enumeration->m_linkEditSegmentBase + m_enumeration->m_dyldInfoCmd->weak_bind_off,
+				m_enumeration->m_dyldInfoCmd->weak_bind_size
+				);
 			break;
 
 		case State_WeakBind:
-			m_state = State_LazyBind;
-			m_begin = m_enumeration->m_linkEditSegmentBase + m_enumeration->m_dyldInfoCmd->lazy_bind_off;
-			m_end = m_begin + m_enumeration->m_dyldInfoCmd->lazy_bind_size;
+			setState(
+				State_LazyBind,
+				m_enumeration->m_linkEditSegmentBase + m_enumeration->m_dyldInfoCmd->lazy_bind_off,
+				m_enumeration->m_dyldInfoCmd->lazy_bind_size
+				);
 			break;
 
 		case State_LazyBind:
-			m_state = State_Done;
+			setState(State_Done,NULL, 0);
 			break;
 
 		default:

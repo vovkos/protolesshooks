@@ -319,7 +319,17 @@ public:
 
 protected:
 	void
-	init();
+	init()
+	{
+		setState(State_Idle, NULL, 0);
+	}
+
+	void
+	setState(
+		State state,
+		const char* p,
+		size_t size
+		);
 
 	bool
 	next();
