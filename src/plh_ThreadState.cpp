@@ -15,8 +15,6 @@ static size_t g_threadStateSlot = -1;
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-#if (_PLH_OS_WIN)
-
 void
 deleteCurrentThreadState()
 {
@@ -29,6 +27,8 @@ deleteCurrentThreadState()
 	delete state;
 	setTlsValue(g_threadStateSlot, 0);
 }
+
+#if (_PLH_OS_WIN)
 
 void
 NTAPI
@@ -58,9 +58,7 @@ void
 finalizeHooks()
 {
 	g_enableCount = INT_MIN / 2; // compensate for possible unbalanced enable calls
-#if (_PLH_OS_WIN)
 	deleteCurrentThreadState();
-#endif
 }
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -145,12 +143,6 @@ getCurrentThreadState(bool createIfNotExists)
 }
 
 //..............................................................................
-
-ThreadState::~ThreadState()
-{
-	restoreOriginalRets();
-	cleanup(m_frameMap.end());
-}
 
 void
 ThreadState::addFrame(
@@ -248,23 +240,6 @@ ThreadState::cleanup(const std::map<size_t, Frame>::iterator& it)
 
 		callHookLeaveFunc(frame->m_ret.m_context);
 		m_frameMap.erase(m_frameMap.begin());
-	}
-}
-
-void
-ThreadState::restoreOriginalRets()
-{
-	std::map<size_t, Frame>::iterator it = m_frameMap.begin();
-	for (; it != m_frameMap.end(); it++)
-	{
-		size_t frameBase = it->first;
-		Frame* frame = &it->second;
-
-		size_t originalRet = !frame->m_chainedRetStack.empty() ?
-			frame->m_chainedRetStack[0].m_originalRet :
-			frame->m_ret.m_originalRet;
-
-		*((size_t*)frameBase + 1) = originalRet; // return address is one slot below rpb/ebp
 	}
 }
 

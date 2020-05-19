@@ -33,7 +33,10 @@ protected:
 	std::map<size_t, Frame> m_frameMap;
 
 public:
-	~ThreadState();
+	~ThreadState()
+	{
+		cleanup(m_frameMap.end());
+	}
 
 	void
 	addFrame(
@@ -54,9 +57,6 @@ protected:
 
 	void
 	cleanup(const std::map<size_t, Frame>::iterator& it);
-
-	void
-	restoreOriginalRets();
 };
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
