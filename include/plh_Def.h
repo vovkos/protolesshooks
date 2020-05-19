@@ -44,6 +44,19 @@
 #	error this OS is not supported yet
 #endif
 
+#if (_PLH_CPP_MSC)
+#	define PLH_CDECL   __cdecl
+#	define PLH_STDCALL __stdcall
+#elif (_PLH_CPP_GCC)
+#	if (_PLH_CPU_X86)
+#		define PLH_CDECL   __attribute__((cdecl))
+#		define PLH_STDCALL __attribute__((stdcall))
+#	else
+#		define PLH_CDECL
+#		define PLH_STDCALL
+#	endif
+#endif
+
 //..............................................................................
 
 #include <stddef.h>
