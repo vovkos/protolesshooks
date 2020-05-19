@@ -106,7 +106,7 @@ ModuleIterator::prepareModuleFileName() const
 		return m_moduleFileName;
 
 	m_moduleFileName = m_linkMap->l_name;
-	if (m_moduleFileName)
+	if (m_moduleFileName && m_moduleFileName[0])
 		return m_moduleFileName;
 
 	static char exeFilePath[PATH_MAX] = { 0 };
