@@ -4,6 +4,8 @@
 
 #if (_PLH_OS_WIN)
 #	include <psapi.h>
+#elif (_PLH_OS_LINUX)
+#	include <linux/limits.h>
 #elif (_PLH_OS_DARWIN)
 #	include <mach-o/dyld.h>
 #endif
