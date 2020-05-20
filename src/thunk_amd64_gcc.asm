@@ -95,12 +95,17 @@ jump_target:
 
 ret_now:
 
-	; grab retval regs from the reg-ret-block and return
+	; grab retval regs from the reg-ret-block
 
 	movdqa  xmm1, [rbp - RegArgBlockSize - 16 * 1]
 	movdqa  xmm0, [rbp - RegArgBlockSize - 16 * 2]
 	mov     rdx,  [rbp - RegArgBlockSize - 16 * 2 - 8 * 1]
 	mov     rax,  [rbp - RegArgBlockSize - 16 * 2 - 8 * 2]
+
+	; standard epilogue
+
+	add     rsp, StackFrameSize
+	pop     rbp
 	ret
 
 hook_ret:

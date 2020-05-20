@@ -86,9 +86,14 @@ jump_target:
 
 ret_now:
 
-	; grab rax from the reg-ret-block and return
+	; grab rax from the reg-ret-block
 
 	mov     rax, [rbp - RegArgBlockSize - RegRetBlockSize]
+
+	; standard epilogue
+
+	add     rsp, StackFrameSize
+	pop     rbp
 	ret
 
 hook_ret:

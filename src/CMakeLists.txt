@@ -29,9 +29,9 @@ set(
 
 set (
 	ASM_LIST
-	plh_thunk_x86.asm
-	plh_thunk_amd64_msc.asm
-	plh_thunk_amd64_gcc.asm
+	thunk_x86.asm
+	thunk_amd64_msc.asm
+	thunk_amd64_gcc.asm
 	)
 
 if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)

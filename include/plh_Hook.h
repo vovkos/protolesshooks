@@ -28,6 +28,7 @@ struct RegArgBlock
 struct RegRetBlock
 {
 	uint64_t m_rax;
+	uint64_t _m_padding;
 };
 
 #	elif (_PLH_CPP_GCC)
@@ -64,6 +65,15 @@ struct RegArgBlock
 struct RegRetBlock
 {
 	uint32_t m_eax;
+	uint32_t m_edx;
+};
+
+struct RegArgBlock // MSC __thiscall/__fastcall; GCC __attribute__((regparm(n)))
+{
+	uint32_t m_ecx;
+	uint32_t m_edx;
+	uint32_t m_eax;
+	uint32_t _m_padding;
 };
 
 #endif
@@ -72,18 +82,16 @@ struct RegRetBlock
 
 enum FrameOffset
 {
-#if (_PLH_CPU_X86)
-	FrameOffset_StackArgBlock = 8,
-	FrameOffset_RegRetBlock   = -(int)(sizeof(RegRetBlock) + 4),
-#elif (_PLH_CPU_AMD64)
-#	if (_PLH_CPP_MSC)
-	FrameOffset_RegArgBlock   = -(int)sizeof(RegArgBlock),
-	FrameOffset_RegRetBlock   = -(int)(sizeof(RegArgBlock) + sizeof(RegRetBlock) + 8),
-	FrameOffset_StackArgBlock = 16 + 8 * 4,
-#	elif (_PLH_CPP_GCC)
 	FrameOffset_RegArgBlock   = -(int)sizeof(RegArgBlock),
 	FrameOffset_RegRetBlock   = -(int)(sizeof(RegArgBlock) + sizeof(RegRetBlock)),
-	FrameOffset_StackArgBlock = 16,
+
+#if (_PLH_CPU_X86)
+	FrameOffset_StackArgBlock = 8, // ebp + eip
+#elif (_PLH_CPU_AMD64)
+#	if (_PLH_CPP_MSC)
+	FrameOffset_StackArgBlock = 16 + 8 * 4, // rbp + rip + home
+#	elif (_PLH_CPP_GCC)
+	FrameOffset_StackArgBlock = 16, // rbp + rip
 #	endif
 #endif
 };

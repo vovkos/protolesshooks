@@ -1,9 +1,11 @@
 section .text
 
-	; reg-ret-block: 1 gp reg + padding
+	; reg-ret-block: 2 gp reg
+	; reg-arg-block: 3 gp regs + padding
 
-	RegRetBlockSize equ 4 + 4
-	StackFrameSize  equ RegRetBlockSize
+	RegRetBlockSize equ 2 * 4
+	RegArgBlockSize equ 3 * 4 + 4
+	StackFrameSize  equ RegRetBlockSize + RegArgBlockSize
 
 	HookAction_Return     equ 1
 	HookAction_JumpTarget equ 2
@@ -22,6 +24,12 @@ thunk_entry:
 	mov     ebp, esp
 	sub     esp, StackFrameSize
 
+	; save all arg registers
+
+	mov     [ebp - 4 * 1], eax
+	mov     [ebp - 4 * 2], edx
+	mov     [ebp - 4 * 3], ecx
+
 	; call the hook-enter function
 
 	sub     esp, 16
@@ -29,8 +37,7 @@ thunk_entry:
 	mov     [esp + 4], ebp
 	mov     eax, [ebp + 4]
 	mov     [esp + 8], eax
-	mov     eax, hookEnter
-	call    eax
+	call    hookEnter
 	add     esp, 16
 
 	; eax now holds hook action
@@ -38,33 +45,41 @@ thunk_entry:
 	test    eax, HookAction_Return
 	jnz     ret_now
 
-	; undo prologue
-
-	add     esp, StackFrameSize
-	pop     ebp
-
-	; skip the exit hook?
-
 	test    eax, HookAction_JumpTarget
 	jnz     jump_target
 
 	; replace return pointer
 
-	mov     eax, hookRet
-	mov     [esp], eax
+	mov     dword [esp + StackFrameSize + 4], hookRet
 
 jump_target:
 
+	; restore all arg registers
+
+	mov     eax, [ebp - 4 * 1]
+	mov     edx, [ebp - 4 * 2]
+	mov     ecx, [ebp - 4 * 3]
+
+	; undo prologue
+
+	add     esp, StackFrameSize
+	pop     ebp
+
 	; jump to target function
 
-	mov     eax, targetFunc
-	jmp     eax
+	jmp     targetFunc
 
 ret_now:
 
-	; grab rax from the reg-ret-block and return
+	; grab retval regs from the reg-ret-block
 
-	mov     eax, [ebp - RegRetBlockSize]
+	mov     edx, [ebp - RegArgBlockSize - 4 * 1]
+	mov     eax, [ebp - RegArgBlockSize - 4 * 2]
+
+	; standard epilogue
+
+	add     esp, StackFrameSize
+	pop     ebp
 	ret
 
 hook_ret:
@@ -80,24 +95,25 @@ hook_ret:
 
 	; save the original retval
 
-	mov     [ebp - RegRetBlockSize], eax
+	mov     [ebp - RegArgBlockSize - 4 * 1], edx
+	mov     [ebp - RegArgBlockSize - 4 * 2], eax
 
 	; call the hook-leave function
 
 	sub     esp, 16
 	mov     dword [esp + 0], hook
 	mov     [esp + 4], ebp
-	mov     [esp + 8], eax
-	mov     eax, hookLeave
-	call    eax
+	call    hookLeave
 	add     esp, 16
 
 	; eax now holds the original return pointer
 
-	; restore the original return pointer and retval
+	; restore the original return pointer and retval regs
 
 	mov     [ebp + 4], eax
-	mov     eax, [ebp - RegRetBlockSize]
+
+	mov     edx, [ebp - RegArgBlockSize - 4 * 1]
+	mov     eax, [ebp - RegArgBlockSize - 4 * 2]
 
 	; standard epilogue
 
