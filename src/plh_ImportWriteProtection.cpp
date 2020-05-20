@@ -4,6 +4,33 @@
 
 #if (_PLH_OS_LINUX)
 #	include <link.h>
+#	if (_PLH_CPU_AMD64 || _PLH_CPU_X86)
+#		define DT_THISPROCNUM 0
+#	endif
+
+// we use undocumented fields in the link map; it's a bit hackish, but
+// there's no clean way of mapping module handle to Elf headers anyway
+
+struct link_map_full: link_map
+{
+	link_map* l_real;
+	Lmid_t l_ns;
+	struct libname_list* l_libname;
+
+	ElfW(Dyn)* l_info[
+		DT_NUM +
+		DT_THISPROCNUM +
+		DT_VERSIONTAGNUM +
+		DT_EXTRANUM +
+		DT_VALNUM +
+		DT_ADDRNUM
+		];
+
+	const ElfW(Phdr)* l_phdr;
+	ElfW(Addr) l_entry;
+	ElfW(Half) l_phnum;
+	ElfW(Half) l_ldnum;
+};
 #endif
 
 namespace plh {
@@ -79,18 +106,14 @@ disableImportWriteProtection(
 	ImportWriteProtectionBackup* backup
 	)
 {
-	link_map* linkMap = (link_map*)module;
-	size_t moduleBase = (size_t)linkMap->l_addr;
-	ElfW(Ehdr)* ehdr = (ElfW(Ehdr)*)moduleBase;
-
-	size_t p = moduleBase + ehdr->e_phoff;
-	for (size_t i = 0; i < ehdr->e_phnum; i++, p += ehdr->e_phentsize)
+	link_map_full* linkMap = (link_map_full*)module;
+	for (size_t i = 0; i < linkMap->l_phnum; i++)
 	{
-		ElfW(Phdr)* phdr = (ElfW(Phdr)*)p;
+		const ElfW(Phdr)* phdr = &linkMap->l_phdr[i];
 		if (phdr->p_type != PT_GNU_RELRO) // read-only-after-relocation (contains GOT)
 			continue;
 
-		size_t begin = moduleBase + phdr->p_vaddr;
+		size_t begin = linkMap->l_addr + phdr->p_vaddr;
 		size_t end = begin + phdr->p_memsz;
 
 		size_t pageSize = getPageSize();

@@ -209,7 +209,7 @@ protected:
 
 struct ElfImportEnumeration
 {
-    char* m_moduleBase;
+    size_t m_baseAddress; // relocation difference, not an absolute address
     ElfW(Sym)* m_symbolTable;
     char* m_stringTable;
     size_t m_stringTableSize;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "plh_ModuleEnumerator.h"
+#include <string.h>
 
 namespace plh {
 
@@ -16,6 +17,11 @@ struct ImportWriteProtectionBackup
 		int m_flags;              // ElfW(Phdr)->p_flags
 		uint32_t m_oldProtection; // returned by VirtualProtect
 	};
+
+	ImportWriteProtectionBackup()
+	{
+		memset(this, 0, sizeof(ImportWriteProtectionBackup));
+	}
 };
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .

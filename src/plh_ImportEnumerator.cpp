@@ -1,5 +1,6 @@
 #include "plh_ImportEnumerator.h"
 #include <assert.h>
+#include <stdio.h>
 
 #if (_PLH_OS_WIN)
 #	include <windows.h>
@@ -426,7 +427,7 @@ ImportIterator::readRel()
 		}
 
 		m_symbolName = m_enumeration->m_stringTable + sym->st_name;
-		m_slot = (void**)(m_enumeration->m_moduleBase + rel->r_offset);
+		m_slot = (void**)(m_enumeration->m_baseAddress + rel->r_offset);
 		return true;
 	}
 
@@ -476,7 +477,7 @@ enumerateImports(
 	}
 
 	std::shared_ptr<ElfImportEnumeration> enumeration = std::make_shared<ElfImportEnumeration>();
-	enumeration->m_moduleBase = (char*)linkMap->l_addr;
+	enumeration->m_baseAddress = linkMap->l_addr;
 	enumeration->m_symbolTable = (ElfW(Sym)*)dynTable[DT_SYMTAB]->d_un.d_ptr;
 	enumeration->m_stringTable = (char*)dynTable[DT_STRTAB]->d_un.d_ptr;
 	enumeration->m_stringTableSize = dynTable[DT_STRSZ]->d_un.d_val;
