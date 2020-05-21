@@ -3,8 +3,8 @@
 #include "plh_ImportWriteProtection.h"
 #include "plh_Hook.h"
 #include <stdio.h>
-#include <assert.h>
 #include <string.h>
+#include <cinttypes>
 #include <string>
 #include <sstream>
 #include <list>
@@ -37,7 +37,7 @@ hookEnter(
 	int indent = incrementIndent(1);
 
 	printf(
-		"%*sTID %llx: sp: %p +%s\n",
+		"%*sTID %" PRIx64 ": sp: %p +%s\n",
 		indent * 2,
 		"",
 		plh::getCurrentThreadId(),
@@ -61,7 +61,7 @@ hookLeave(
 	if (!frameBase) // abandoned
 	{
 		printf(
-			"%*sTID %llx: ~%s\n",
+			"%*sTID %" PRIx64 ": ~%s\n",
 			indent * 2,
 			"",
 			plh::getCurrentThreadId(),
@@ -80,7 +80,7 @@ hookLeave(
 #endif
 
 	printf(
-		"%*sTID %llx: sp: %p -%s -> %d/0x%x\n",
+		"%*sTID %" PRIx64 ": sp: %p -%s -> %d/0x%x\n",
 		indent * 2,
 		"",
 		plh::getCurrentThreadId(),
@@ -262,7 +262,7 @@ main()
 	printf("Hooking done, enabling hooks...\n");
 	plh::enableHooks();
 
-	// puts/printf below will mess up the output; let's use something else...
+	// puts/printf will mess up the output; let's use something else...
 
 	std::string* p = new std::string;
 	delete p;
