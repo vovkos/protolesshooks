@@ -4,6 +4,11 @@
 #include <atomic>
 #include <mutex>
 
+// skipping finalization is DANGEROUS -- your hooks will be called AFTER
+// C runtime is finalized (lots of standard C function will crash-and-burn)
+
+#define _PLH_FINALIZE_HOOKS_AT_EXIT 1
+
 namespace plh {
 
 //..............................................................................
@@ -20,11 +25,11 @@ deleteCurrentThreadState()
 	setTlsValue(g_threadDisableCountSlot, INT_MAX); // compensate for possibly unbalanced enable calls
 
 	ThreadState* state = (ThreadState*)getTlsValue(g_threadStateSlot);
-	if (!state)
-		return;
-
-	delete state;
-	setTlsValue(g_threadStateSlot, 0);
+	if (state)
+	{
+		delete state;
+		setTlsValue(g_threadStateSlot, 0);
+	}
 }
 
 #if (_PLH_OS_WIN)
@@ -75,7 +80,9 @@ initializeHooks()
 	g_threadStateSlot = createDestructibleTlsSlot(deleteThreadState);
 #endif
 
+#if (_PLH_FINALIZE_HOOKS_AT_EXIT)
 	::atexit(finalizeHooks);
+#endif
 }
 
 size_t
