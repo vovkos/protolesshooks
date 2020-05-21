@@ -6,6 +6,8 @@
 
 //..............................................................................
 
+namespace test_params {
+
 // target function -- all register arguments are used up
 
 int foo(
@@ -45,7 +47,7 @@ int foo(
 	return 123;
 }
 
-//..............................................................................
+// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 plh::HookAction
 fooHookEnter(
@@ -190,10 +192,15 @@ fooHookLeave(
 		);
 }
 
+} // namespace test_params
+
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-int main()
+void
+testParams()
 {
+	using namespace test_params;
+
 	typedef int FooFunc(
 		int, double,
 		int, double,
@@ -221,7 +228,228 @@ int main()
 		8, 80.8,
 		9, 90.9
 		);
+}
 
+//..............................................................................
+
+namespace test_modify {
+
+// target function
+
+int foo(int a)
+{
+	printf("foo(%d)\n", a);
+	assert(a == 20);
+	return 123;
+}
+
+// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+plh::HookAction
+fooHookEnter(
+	void* targetFunc,
+	void* callbackParam,
+	size_t frameBase
+	)
+{
+	printf(
+		"fooHookEnter(func: %p, param: %p, frame: %p)\n",
+		targetFunc,
+		callbackParam,
+		(void*)frameBase
+		);
+
+#if (_PLH_CPU_AMD64)
+#	if (_PLH_CPP_MSC)
+	plh::RegArgBlock* regArgBlock = (plh::RegArgBlock*)(frameBase + plh::FrameOffset_RegArgBlock);
+	int a = (int)regArgBlock->m_rcx;
+	int newA = a * 2;
+	regArgBlock->m_rcx = newA;
+#	elif (_PLH_CPP_GCC)
+	plh::RegArgBlock* regArgBlock = (plh::RegArgBlock*)(frameBase + plh::FrameOffset_RegArgBlock);
+	int a = (int)regArgBlock->m_rdi;
+	int newA = a * 2;
+	regArgBlock->m_rdi = newA;
+#	endif
+#elif (_PLH_CPU_X86)
+	plh::VaList va;
+	plh::vaStart(va, frameBase);
+	int* p = &plh::vaArg<int>(va);
+	int a = *p;
+	int newA = a * 2;
+	*p = newA;
+#endif
+
+	printf("  modifying arg: (%d -> %d)\n", a, newA);
+	assert(a == 10);
+	return plh::HookAction_Default;
+}
+
+void
+fooHookLeave(
+	void* targetFunc,
+	void* callbackParam,
+	size_t frameBase
+	)
+{
+	printf(
+		"fooHookLeave(func: %p, param: %p, frame: %p)\n",
+		targetFunc,
+		callbackParam,
+		(void*)frameBase
+		);
+
+	plh::RegRetBlock* regRetBlock = (plh::RegRetBlock*)(frameBase + plh::FrameOffset_RegRetBlock);
+
+#if (_PLH_CPU_AMD64)
+	int returnValue = (int)regRetBlock->m_rax;
+	int newReturnValue = returnValue * 2;
+	regRetBlock->m_rax = newReturnValue;
+#elif (_PLH_CPU_X86)
+	int returnValue = regRetBlock->m_eax;
+	int newReturnValue = returnValue * 2;
+	regRetBlock->m_eax = newReturnValue;
+#endif
+
+	printf(
+		"  modifying retval: %d -> %d\n",
+		returnValue,
+		newReturnValue
+		);
+
+	assert(returnValue == 123);
+}
+
+} // namespace test_modify
+
+// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+void
+testModify()
+{
+	using namespace test_modify;
+
+	typedef int FooFunc(int);
+
+	plh::HookArena arena;
+	plh::Hook* fooHook = arena.allocate((void*)foo, (void*)0xabcdef, fooHookEnter, fooHookLeave);
+	plh::enableHooks();
+	int result = ((FooFunc*)fooHook)(10);
+	printf("result: %d\n", result);
+	assert(result == 246);
+}
+
+//..............................................................................
+
+namespace test_block {
+
+// target function
+
+int foo(int x)
+{
+	printf("foo(%d)\n", x);
+	return 123;
+}
+
+// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+// enter hook
+
+plh::HookAction
+fooHookEnter(
+	void* targetFunc,
+	void* callbackParam,
+	size_t frameBase
+	)
+{
+	printf(
+		"fooHookEnter(func: %p, param: %p, frame: %p)\n",
+		targetFunc,
+		callbackParam,
+		(void*)frameBase
+		);
+
+#if (_PLH_CPU_AMD64)
+#	if (_PLH_CPP_MSC)
+	plh::RegArgBlock* regArgBlock = (plh::RegArgBlock*)(frameBase + plh::FrameOffset_RegArgBlock);
+	int a = (int)regArgBlock->m_rcx;
+#	elif (_PLH_CPP_GCC)
+	plh::RegArgBlock* regArgBlock = (plh::RegArgBlock*)(frameBase + plh::FrameOffset_RegArgBlock);
+	int a = (int)regArgBlock->m_rdi;
+#	endif
+#elif (_PLH_CPU_X86)
+	plh::VaList va;
+	plh::vaStart(va, frameBase);
+	int a = plh::vaArg<int>(va);
+#endif
+
+	plh::RegRetBlock* regRetBlock = (plh::RegRetBlock*)(frameBase + plh::FrameOffset_RegRetBlock);
+
+	int returnValue;
+
+	switch (a)
+	{
+	case 0:
+		return plh::HookAction_JumpTarget; // in this case, it's the same as HookAction_Default
+
+	case 1:
+		returnValue = foo(a);
+		break;
+
+	case 2:
+		returnValue = 246;
+		break;
+
+	default:
+		assert(false);
+	}
+
+#if (_PLH_CPU_AMD64)
+	regRetBlock->m_rax = returnValue;
+#elif (_PLH_CPU_X86)
+	regRetBlock->m_eax = returnValue;
+#endif
+
+	return plh::HookAction_Return;
+}
+
+} // namespace test_block
+
+void
+testBlock()
+{
+	using namespace test_block;
+
+	typedef int FooFunc(int);
+
+	plh::HookArena arena;
+	plh::Hook* fooHook = arena.allocate((void*)foo, (void*)0xabcdef, fooHookEnter, NULL);
+	plh::enableHooks();
+
+	printf("pass-through...\n");
+	int result = ((FooFunc*)fooHook)(0);
+	printf("result: %d\n", result);
+	assert(result == 123);
+
+	printf("proxy-call...\n");
+	result = ((FooFunc*)fooHook)(1);
+	printf("result: %d\n", result);
+	assert(result == 123);
+
+	printf("block completely...\n");
+	result = ((FooFunc*)fooHook)(2);
+	printf("result: %d\n", result);
+	assert(result == 246);
+}
+
+//..............................................................................
+
+int
+main()
+{
+	testParams();
+	testModify();
+	testBlock();
 	return 0;
 }
 
