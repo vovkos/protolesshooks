@@ -1,4 +1,4 @@
-﻿#include "plh_Hook.h"
+#include "plh_Hook.h"
 #include "plh_HookCommon.h"
 #include "plh_ExecutableBlockArena.h"
 #include <string.h>

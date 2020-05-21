@@ -1,4 +1,4 @@
-﻿#include "plh_HookCommon.h"
+#include "plh_HookCommon.h"
 #include "plh_ThreadState.h"
 #include <assert.h>
 

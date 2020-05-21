@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "plh_Def.h"
 #include <assert.h>
