@@ -17,7 +17,7 @@ static size_t g_threadStateSlot = -1;
 void
 deleteCurrentThreadState()
 {
-	assert(g_threadStateSlot != -1 && "TLS slot is not allocated");
+	setTlsValue(g_threadDisableCountSlot, INT_MAX); // compensate for possibly unbalanced enable calls
 
 	ThreadState* state = (ThreadState*)getTlsValue(g_threadStateSlot);
 	if (!state)
@@ -48,6 +48,8 @@ deleteThreadState(void* p)
 {
 	ThreadState* state = (ThreadState*)p;
 	assert(state && "null in TLS-destructor");
+
+	setTlsValue(g_threadDisableCountSlot, INT_MAX);  // compensate for possibly unbalanced enable calls
 	delete state;
 }
 
@@ -56,7 +58,7 @@ deleteThreadState(void* p)
 void
 finalizeHooks()
 {
-	g_enableCount = INT_MIN / 2; // compensate for possible unbalanced enable calls
+	g_enableCount = INT_MIN / 2; // compensate for possibly unbalanced enable calls
 	deleteCurrentThreadState();
 }
 
