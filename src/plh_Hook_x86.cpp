@@ -15,9 +15,9 @@ const uint8_t g_thunkCode[] =
 	0x55,                                            // 00000000  push    ebp
 	0x89, 0xE5,                                      // 00000001  mov     ebp, esp
 	0x83, 0xEC, 0x18,                                // 00000003  sub     esp, StackFrameSize
-	0x89, 0x45, 0xFC,                                // 00000006  mov     [ebp - 4 * 1], eax
-	0x89, 0x55, 0xF8,                                // 00000009  mov     [ebp - 4 * 2], edx
-	0x89, 0x4D, 0xF4,                                // 0000000C  mov     [ebp - 4 * 3], ecx
+	0x89, 0x45, 0xF8,                                // 00000006  mov     [ebp - 4 * 2], eax
+	0x89, 0x55, 0xF4,                                // 00000009  mov     [ebp - 4 * 3], edx
+	0x89, 0x4D, 0xF0,                                // 0000000C  mov     [ebp - 4 * 4], ecx
 	0x83, 0xEC, 0x10,                                // 0000000F  sub     esp, 16
 	0xC7, 0x04, 0x24, 0x00, 0x00, 0x00, 0x00,        // 00000012  mov     dword [esp + 0], hook
 	0x89, 0x6C, 0x24, 0x04,                          // 00000019  mov     [esp + 4], ebp
@@ -30,9 +30,9 @@ const uint8_t g_thunkCode[] =
 	0xA9, 0x02, 0x00, 0x00, 0x00,                    // 00000033  test    eax, HookAction_JumpTarget
 	0x75, 0x08,                                      // 00000038  jnz     jump_target
 	0xC7, 0x44, 0x24, 0x1C, 0x00, 0x00, 0x00, 0x00,  // 0000003A  mov     dword [esp + StackFrameSize + 4], hookRet
-	0x8B, 0x45, 0xFC,                                // 00000042  mov     eax, [ebp - 4 * 1]
-	0x8B, 0x55, 0xF8,                                // 00000045  mov     edx, [ebp - 4 * 2]
-	0x8B, 0x4D, 0xF4,                                // 00000048  mov     ecx, [ebp - 4 * 3]
+	0x8B, 0x45, 0xF8,                                // 00000042  mov     eax, [ebp - 4 * 2]
+	0x8B, 0x55, 0xF4,                                // 00000045  mov     edx, [ebp - 4 * 3]
+	0x8B, 0x4D, 0xF0,                                // 00000048  mov     ecx, [ebp - 4 * 4]
 	0x83, 0xC4, 0x18,                                // 0000004B  add     esp, StackFrameSize
 	0x5D,                                            // 0000004E  pop     ebp
 	0xE9, 0x00, 0x00, 0x00, 0x00,                    // 0000004F  jmp     targetFunc

@@ -26,9 +26,9 @@ thunk_entry:
 
 	; save all arg registers
 
-	mov     [ebp - 4 * 1], eax
-	mov     [ebp - 4 * 2], edx
-	mov     [ebp - 4 * 3], ecx
+	mov     [ebp - 4 * 2], eax
+	mov     [ebp - 4 * 3], edx
+	mov     [ebp - 4 * 4], ecx
 
 	; call the hook-enter function
 
@@ -56,9 +56,9 @@ jump_target:
 
 	; restore all arg registers
 
-	mov     eax, [ebp - 4 * 1]
-	mov     edx, [ebp - 4 * 2]
-	mov     ecx, [ebp - 4 * 3]
+	mov     eax, [ebp - 4 * 2]
+	mov     edx, [ebp - 4 * 3]
+	mov     ecx, [ebp - 4 * 4]
 
 	; undo prologue
 
