@@ -50,7 +50,15 @@ if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 		message(FATAL_ERROR "Unsupported CPU: ${TARGET_CPU}")
 	endif()
 
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fvisibility=hidden")
+	set(_EXTRA_CXX_FLAGS
+		-std=c++11
+		-fvisibility=hidden
+		-Wno-dangling-else
+		-Wno-logical-op-parentheses
+		)
+
+	string(REPLACE ";" " " _EXTRA_CXX_FLAGS "${_EXTRA_CXX_FLAGS}")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${_EXTRA_CXX_FLAGS}")
 endif()
 
 #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
