@@ -1,5 +1,4 @@
 #include "plh_ModuleEnumerator.h"
-#include <assert.h>
 
 #if (_PLH_OS_WIN)
 #	include <codecvt>

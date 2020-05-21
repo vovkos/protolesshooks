@@ -3,7 +3,6 @@
 #include <limits.h>
 #include <atomic>
 #include <mutex>
-#include <assert.h>
 
 namespace plh {
 
@@ -80,7 +79,6 @@ initializeHooks()
 size_t
 getCurrentThreadDisableCount()
 {
-	assert(g_threadDisableCountSlot != -1 && "TLS slot is not allocated");
 	return getTlsValue(g_threadDisableCountSlot);
 }
 
@@ -110,7 +108,6 @@ inline
 void
 incrementCurrentThreadDisableCount(intptr_t delta)
 {
-	assert(g_threadDisableCountSlot != -1 && "TLS slot is not allocated");
 	size_t count = getTlsValue(g_threadDisableCountSlot);
 	setTlsValue(g_threadDisableCountSlot, count + delta);
 }
@@ -130,7 +127,6 @@ enableCurrentThreadHooks()
 ThreadState*
 getCurrentThreadState(bool createIfNotExists)
 {
-	assert(g_threadStateSlot != -1 && "TLS slot is not allocated");
 	assert(getCurrentThreadDisableCount() && "thread hooks are not disabled (should be)");
 
 	ThreadState* state = (ThreadState*)getTlsValue(g_threadStateSlot);

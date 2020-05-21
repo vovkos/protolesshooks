@@ -1,5 +1,4 @@
 #include "plh_ImportEnumerator.h"
-#include <assert.h>
 #include <stdio.h>
 
 #if (_PLH_OS_WIN)

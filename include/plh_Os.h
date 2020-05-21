@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "plh_Def.h"
+#include <assert.h>
 
 #if (_PLH_OS_WIN)
 #	include <windows.h>
@@ -16,7 +17,7 @@ namespace plh {
 
 //..............................................................................
 
-// dlopen/dlcose wraper
+// dlopen/dlcose wrapper
 
 #if (!_PLH_OS_WIN)
 
@@ -103,11 +104,12 @@ allocateExecutablePages(size_t size)
 inline
 bool
 freeExecutablePages(
-	void* pages,
+	void* p,
 	size_t size
 	)
 {
-	return ::VirtualFree(pages, size, MEM_RELEASE) != 0;
+	assert(p && "executable pages are not allocated");
+	return ::VirtualFree(p, size, MEM_RELEASE) != 0;
 }
 
 #else
@@ -133,6 +135,7 @@ freeExecutablePages(
 	size_t size
 	)
 {
+	assert(p && "executable pages are not allocated");
 	return ::munmap(p, size) == 0;
 }
 
@@ -155,6 +158,7 @@ inline
 intptr_t
 getTlsValue(size_t slot)
 {
+	assert(slot != -1 && "TLS slot is not allocated");
 	return (intptr_t)::TlsGetValue((DWORD)slot);
 }
 
@@ -165,6 +169,7 @@ setTlsValue(
 	intptr_t value
 	)
 {
+	assert(slot != -1 && "TLS slot is not allocated");
 	return ::TlsSetValue((DWORD)slot, (void*)value) != 0;
 }
 
@@ -192,6 +197,7 @@ inline
 intptr_t
 getTlsValue(size_t slot)
 {
+	assert(slot != -1 && "TLS slot is not allocated");
 	return (intptr_t)::pthread_getspecific((pthread_key_t)slot);
 }
 
@@ -203,6 +209,7 @@ setTlsValue(
 	intptr_t value
 	)
 {
+	assert(slot != -1 && "TLS slot is not allocated");
 	return ::pthread_setspecific((pthread_key_t)slot, (void*)value) == 0;
 }
 

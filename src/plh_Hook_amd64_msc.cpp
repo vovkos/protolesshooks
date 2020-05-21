@@ -2,7 +2,6 @@
 #include "plh_HookCommon.h"
 #include "plh_ThreadState.h"
 #include "plh_ExecutableBlockArena.h"
-#include <assert.h>
 
 //..............................................................................
 
