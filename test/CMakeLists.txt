@@ -29,28 +29,30 @@ add_test(
 
 # . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-add_executable (
-	test_stdcall
-	test_stdcall.cpp
-	)
+if (CMAKE_SIZEOF_VOID_P EQUAL 4) # stdcall is x86-specific
+	add_executable (
+		test_stdcall
+		test_stdcall.cpp
+		)
 
-target_link_libraries (
-	test_stdcall
-	protolesshooks
-	)
-
-if (UNIX)
 	target_link_libraries (
 		test_stdcall
-		pthread
-		dl
+		protolesshooks
+		)
+
+	if (UNIX)
+		target_link_libraries (
+			test_stdcall
+			pthread
+			dl
+			)
+	endif()
+
+	add_test(
+		NAME test_stdcall
+		COMMAND test_stdcall
 		)
 endif()
-
-add_test(
-	NAME test_stdcall
-	COMMAND test_stdcall
-	)
 
 # . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -71,4 +73,38 @@ if(WIN32)
 		)
 endif()
 
-#...............................................................................
+# . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+if (WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 4) # thiscall and fastcall are msc-x86-specific
+	add_executable (
+		test_thiscall
+		test_thiscall.cpp
+		)
+
+	target_link_libraries (
+		test_thiscall
+		protolesshooks
+		)
+
+	add_test(
+		NAME test_thiscall
+		COMMAND test_thiscall
+		)
+
+	add_executable (
+		test_fastcall
+		test_fastcall.cpp
+		)
+
+	target_link_libraries (
+		test_fastcall
+		protolesshooks
+		)
+
+	add_test(
+		NAME test_fastcall
+		COMMAND test_fastcall
+		)
+endif()
+
+# . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
