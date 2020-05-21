@@ -66,30 +66,32 @@ const uint8_t g_thunkCode[] =
 	0x66, 0x0F, 0x6F, 0x85, 0x30, 0xFF, 0xFF, 0xFF,  // 00000106  movdqa  xmm0, [rbp - RegArgBlockSize - 16 * 2]
 	0x48, 0x8B, 0x95, 0x28, 0xFF, 0xFF, 0xFF,        // 0000010E  mov     rdx,  [rbp - RegArgBlockSize - 16 * 2 - 8 * 1]
 	0x48, 0x8B, 0x85, 0x20, 0xFF, 0xFF, 0xFF,        // 00000115  mov     rax,  [rbp - RegArgBlockSize - 16 * 2 - 8 * 2]
-	0xC3,                                            // 0000011C  ret
-	0x48, 0x83, 0xEC, 0x08,                          // 0000011D  sub     rsp, 8  ; <<< hookRet
-	0x55,                                            // 00000121  push    rbp
-	0x48, 0x89, 0xE5,                                // 00000122  mov     rbp, rsp
-	0x48, 0x81, 0xEC, 0xE0, 0x00, 0x00, 0x00,        // 00000125  sub     rsp, StackFrameSize
-	0x66, 0x0F, 0x7F, 0x8D, 0x40, 0xFF, 0xFF, 0xFF,  // 0000012C  movdqa  [rbp - RegArgBlockSize - 16 * 1],         xmm1
-	0x66, 0x0F, 0x7F, 0x85, 0x30, 0xFF, 0xFF, 0xFF,  // 00000134  movdqa  [rbp - RegArgBlockSize - 16 * 2],         xmm0
-	0x48, 0x89, 0x95, 0x28, 0xFF, 0xFF, 0xFF,        // 0000013C  mov     [rbp - RegArgBlockSize - 16 * 2 - 8 * 1], rdx
-	0x48, 0x89, 0x85, 0x20, 0xFF, 0xFF, 0xFF,        // 00000143  mov     [rbp - RegArgBlockSize - 16 * 2 - 8 * 2], rax
-	0x48, 0xBF,                                      // 0000014A  mov     rdi, hook
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // 0000014C
-	0x48, 0x89, 0xEE,                                // 00000154  mov     rsi, rbp
-	0x48, 0x89, 0xC2,                                // 00000157  mov     rdx, rax
-	0x48, 0xB8,                                      // 0000015A  mov     rax, hookLeave
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // 0000015C
-	0xFF, 0xD0,                                      // 00000164  call    rax
-	0x48, 0x89, 0x45, 0x08,                          // 00000166  mov     [rbp + 8], rax
-	0x66, 0x0F, 0x6F, 0x8D, 0x40, 0xFF, 0xFF, 0xFF,  // 0000016A  movdqa  xmm1, [rbp - RegArgBlockSize - 16 * 1]
-	0x66, 0x0F, 0x6F, 0x85, 0x30, 0xFF, 0xFF, 0xFF,  // 00000172  movdqa  xmm0, [rbp - RegArgBlockSize - 16 * 2]
-	0x48, 0x8B, 0x95, 0x28, 0xFF, 0xFF, 0xFF,        // 0000017A  mov     rdx,  [rbp - RegArgBlockSize - 16 * 2 - 8 * 1]
-	0x48, 0x8B, 0x85, 0x20, 0xFF, 0xFF, 0xFF,        // 00000181  mov     rax,  [rbp - RegArgBlockSize - 16 * 2 - 8 * 2]
-	0x48, 0x81, 0xC4, 0xE0, 0x00, 0x00, 0x00,        // 00000188  add     rsp, StackFrameSize
-	0x5D,                                            // 0000018F  pop     rbp
-	0xC3,                                            // 00000190  ret
+	0x48, 0x81, 0xC4, 0xE0, 0x00, 0x00, 0x00,        // 0000011C  add     rsp, StackFrameSize
+	0x5D,                                            // 00000123  pop     rbp
+	0xC3,                                            // 00000124  ret
+	0x48, 0x83, 0xEC, 0x08,                          // 00000125  sub     rsp, 8  ; <<< hookRet
+	0x55,                                            // 00000129  push    rbp
+	0x48, 0x89, 0xE5,                                // 0000012A  mov     rbp, rsp
+	0x48, 0x81, 0xEC, 0xE0, 0x00, 0x00, 0x00,        // 0000012D  sub     rsp, StackFrameSize
+	0x66, 0x0F, 0x7F, 0x8D, 0x40, 0xFF, 0xFF, 0xFF,  // 00000134  movdqa  [rbp - RegArgBlockSize - 16 * 1],         xmm1
+	0x66, 0x0F, 0x7F, 0x85, 0x30, 0xFF, 0xFF, 0xFF,  // 0000013C  movdqa  [rbp - RegArgBlockSize - 16 * 2],         xmm0
+	0x48, 0x89, 0x95, 0x28, 0xFF, 0xFF, 0xFF,        // 00000144  mov     [rbp - RegArgBlockSize - 16 * 2 - 8 * 1], rdx
+	0x48, 0x89, 0x85, 0x20, 0xFF, 0xFF, 0xFF,        // 0000014B  mov     [rbp - RegArgBlockSize - 16 * 2 - 8 * 2], rax
+	0x48, 0xBF,                                      // 00000152  mov     rdi, hook
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // 00000154
+	0x48, 0x89, 0xEE,                                // 0000015C  mov     rsi, rbp
+	0x48, 0x89, 0xC2,                                // 0000015F  mov     rdx, rax
+	0x48, 0xB8,                                      // 00000162  mov     rax, hookLeave
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // 00000164
+	0xFF, 0xD0,                                      // 0000016C  call    rax
+	0x48, 0x89, 0x45, 0x08,                          // 0000016E  mov     [rbp + 8], rax
+	0x66, 0x0F, 0x6F, 0x8D, 0x40, 0xFF, 0xFF, 0xFF,  // 00000172  movdqa  xmm1, [rbp - RegArgBlockSize - 16 * 1]
+	0x66, 0x0F, 0x6F, 0x85, 0x30, 0xFF, 0xFF, 0xFF,  // 0000017A  movdqa  xmm0, [rbp - RegArgBlockSize - 16 * 2]
+	0x48, 0x8B, 0x95, 0x28, 0xFF, 0xFF, 0xFF,        // 00000182  mov     rdx,  [rbp - RegArgBlockSize - 16 * 2 - 8 * 1]
+	0x48, 0x8B, 0x85, 0x20, 0xFF, 0xFF, 0xFF,        // 00000189  mov     rax,  [rbp - RegArgBlockSize - 16 * 2 - 8 * 2]
+	0x48, 0x81, 0xC4, 0xE0, 0x00, 0x00, 0x00,        // 00000190  add     rsp, StackFrameSize
+	0x5D,                                            // 00000197  pop     rbp
+	0xC3,                                            // 00000198  ret
 };
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -100,9 +102,9 @@ enum ThunkCodeOffset
 	ThunkCodeOffset_HookEnterPtr  = 0x0070,
 	ThunkCodeOffset_HookRetPtr    = 0x00e6,
 	ThunkCodeOffset_TargetFuncPtr = 0x00f4,
-	ThunkCodeOffset_HookRet       = 0x011d,
-	ThunkCodeOffset_HookPtr2      = 0x014c,
-	ThunkCodeOffset_HookLeavePtr  = 0x015c,
+	ThunkCodeOffset_HookRet       = 0x0125,
+	ThunkCodeOffset_HookPtr2      = 0x0154,
+	ThunkCodeOffset_HookLeavePtr  = 0x0164,
 	ThunkCodeOffset_End           = sizeof(g_thunkCode),
 };
 
