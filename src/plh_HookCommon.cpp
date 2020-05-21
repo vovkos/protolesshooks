@@ -24,11 +24,11 @@ hookEnterCommon(
 		action = context->m_enterFunc(context->m_targetFunc, context->m_callbackParam, frameBase) :
 		HookAction_Default;
 
-	if (!context->m_leaveFunc)
-		action = HookAction_JumpTarget;
-
 	if (action == HookAction_Default)
-		threadState->addFrame(context, frameBase, originalRet);
+		if (!context->m_leaveFunc)
+			action = HookAction_JumpTarget;
+		else
+			threadState->addFrame(context, frameBase, originalRet);
 
 	enableCurrentThreadHooks();
 	return action;
