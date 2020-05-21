@@ -108,3 +108,24 @@ if (WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 4) # thiscall and fastcall are msc-x86-s
 endif()
 
 # . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+if (GCC AND CMAKE_SIZEOF_VOID_P EQUAL 4) # regparm attrs are gcc-x86-specific
+	add_executable (
+		test_regparm
+		test_regparm.cpp
+		)
+
+	target_link_libraries (
+		test_regparm
+		protolesshooks
+		pthread
+		dl
+		)
+
+	add_test(
+		NAME test_regparm
+		COMMAND test_regparm
+		)
+endif()
+
+# . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
