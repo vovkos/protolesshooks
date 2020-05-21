@@ -102,4 +102,54 @@ add_test(
 	COMMAND sample_03_global
 )
 
+# . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+add_executable (
+	sample_04_modify
+	sample_04_modify.cpp
+)
+
+target_link_libraries (
+	sample_04_modify
+	protolesshooks
+)
+
+if (UNIX)
+	target_link_libraries (
+		sample_04_modify
+		pthread
+		dl
+	)
+endif()
+
+add_test(
+	NAME sample_04_modify
+	COMMAND sample_04_modify
+)
+
+# . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+add_executable (
+	sample_05_block
+	sample_05_block.cpp
+)
+
+target_link_libraries (
+	sample_05_block
+	protolesshooks
+)
+
+if (UNIX)
+	target_link_libraries (
+		sample_05_block
+		pthread
+		dl
+	)
+endif()
+
+add_test(
+	NAME sample_05_block
+	COMMAND sample_05_block
+)
+
 #...............................................................................
