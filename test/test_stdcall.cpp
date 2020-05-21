@@ -4,6 +4,10 @@
 #undef NDEBUG
 #include <assert.h>
 
+#if (!_PLH_CPU_X86)
+#	error invalid ABI for this program
+#endif
+
 //..............................................................................
 
 int
@@ -28,13 +32,10 @@ fooHookEnter(
 		(void*)frameBase
 		);
 
-#if (_PLH_CPU_X86)
 	plh::VaList va;
 	plh::vaStart(va, frameBase);
 	int a = plh::vaArg<int>(va);
 	printf("  (%d)\n", a);
-#endif
-
 	return plh::HookAction_Default;
 }
 
@@ -53,13 +54,7 @@ fooHookLeave(
 		);
 
 	plh::RegRetBlock* regRetBlock = (plh::RegRetBlock*)(frameBase + plh::FrameOffset_RegRetBlock);
-
-#if (_PLH_CPU_AMD64)
-	int returnValue = (int)regRetBlock->m_rax;
-#elif (_PLH_CPU_X86)
 	int returnValue = regRetBlock->m_eax;
-#endif
-
 	printf("  -> %d\n", returnValue);
 }
 
