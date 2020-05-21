@@ -66,9 +66,9 @@ namespace plh {
 class ImportIteratorBase
 {
 protected:
-    const char* m_symbolName;
+	const char* m_symbolName;
 	const char* m_moduleName;
-    void** m_slot;
+	void** m_slot;
 
 public:
 	ImportIteratorBase()
@@ -150,8 +150,8 @@ protected:
 
 struct PeImportEnumeration
 {
-    char* m_moduleBase;
-    IMAGE_IMPORT_DESCRIPTOR* m_importDir;
+	char* m_moduleBase;
+	IMAGE_IMPORT_DESCRIPTOR* m_importDir;
 	size_t m_importDescCount;
 };
 
@@ -167,14 +167,14 @@ protected:
 	std::shared_ptr<PeCodeMap> m_codeMap;
 	size_t m_importDescIdx;
 	IMAGE_THUNK_DATA* m_nameThunk;
-    IMAGE_THUNK_DATA* m_addrThunk;
+	IMAGE_THUNK_DATA* m_addrThunk;
 
 public:
-    ImportIterator();
+	ImportIterator();
 	ImportIterator(std::shared_ptr<PeImportEnumeration>&& enumeration);
 
-    ImportIterator&
-    operator ++ ();
+	ImportIterator&
+	operator ++ ();
 
 	ImportIterator
 	operator ++ (int);
@@ -211,14 +211,14 @@ protected:
 
 struct ElfImportEnumeration
 {
-    size_t m_baseAddress; // relocation difference, not an absolute address
-    ElfW(Sym)* m_symbolTable;
-    char* m_stringTable;
-    size_t m_stringTableSize;
-    ElfRel* m_pltRelTable;
-    size_t m_pltRelCount;
-    ElfRel* m_gotRelTable;
-    size_t m_gotRelCount;
+	size_t m_baseAddress; // relocation difference, not an absolute address
+	ElfW(Sym)* m_symbolTable;
+	char* m_stringTable;
+	size_t m_stringTableSize;
+	ElfRel* m_pltRelTable;
+	size_t m_pltRelCount;
+	ElfRel* m_gotRelTable;
+	size_t m_gotRelCount;
 };
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -226,19 +226,19 @@ struct ElfImportEnumeration
 class ImportIterator: public ImportIteratorBase
 {
 protected:
-    std::shared_ptr<ElfImportEnumeration> m_enumeration;
-    size_t m_index;
+	std::shared_ptr<ElfImportEnumeration> m_enumeration;
+	size_t m_index;
 
 public:
-    ImportIterator()
+	ImportIterator()
 	{
-    	m_index = -1;
+		m_index = -1;
 	}
 
 	ImportIterator(std::shared_ptr<ElfImportEnumeration>&& enumeration);
 
-    ImportIterator&
-    operator ++ ();
+	ImportIterator&
+	operator ++ ();
 
 	ImportIterator
 	operator ++ (int);
@@ -359,7 +359,7 @@ protected:
 bool
 enumerateImports(
 	ImportIterator* iterator,
-    void* module = NULL
+	void* module = NULL
 	);
 
 bool
