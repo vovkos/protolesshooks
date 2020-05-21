@@ -9,24 +9,27 @@ Prototypeless Hooks
 Abstract
 --------
 
-The ``protolesshooks`` library provides a thunking engine with support for function exit hooks and SEH-x64 exception hooks which works *without* information about the *target functions prototypes*.
+The ``protolesshooks`` library provides a hooking engine which works *without* information about *target functions prototypes*.
 
 This code is intended for use in the upcoming **API Spy** plugin for `IO Ninja <https://ioninja.com>`__; API Spy is going to be an advanced cross-platform alternative for ``ltrace``.
 
 Overview
 --------
 
-The general idea of **API hooking** is to intercept calls to system or 3rd-party libraries and redirect those calls through your *spy* functions, also known as *hooks*. Hooking is essential in reverse-engineering and many other non-trivial debugging scenarios. Depending on the chosen hooking method, hooks may allow you to:
+The idea of **API hooking** is to intercept calls to system or 3rd-party libraries and redirect those through your *spy functions*, also known as *hooks*. Hooking is often required in reverse-engineering and many other non-trivial debugging scenarios. Depending on the chosen hooking method, with hooks you can:
 
 1. Display API function names called by the process;
 2. Measure the time of each call;
 3. Build a call-graph;
 4. Inspect/modify function call arguments;
-5. Inspect/modify return values.
+5. Inspect/modify return values;
+6. Block the target function completely.
 
-Most hooking-related libraries, frameworks, and articles focus on *injection techniques*, i.e., the details of modifying the process' memory in order to make your hook called every time the process invokes the original function. Once this task is accomplished, the problem is deemed to be solved -- your hook can now proxy-call the original function, pass its return value back to the caller, and perform logging/argument/retval modification as necessary.
+Most hooking-related libraries, frameworks, and articles focus on *injection techniques*, i.e., the details of making your hook getting called every time before the original function. Once this task is accomplished, the problem is deemed to be solved -- your hook can now *proxy-call* the original function, pass its return value back to the caller, and perform logging/argument/retval modification as necessary.
 
-The problem here, however, is that without the full knowledge of *target function prototypes* you can't proxy-call! It's easy to jump directly to the original function, yes -- and it allows creating a planar list of API calls (i.e. the capability (1) of the list above). But for (2), (3), and (5) your hook needs to *gain control back after return* from the target function -- which is trivial with the knowledge of target function prototypes, and quite challenging without. Not to state the obvious, but to encode prototypes for *all* the library calls in a process is nearly impossible -- there could be hundreds of different API calls, and some of those may be undocumented.
+The problem here, however, is that without *target function prototypes* you **can't proxy-call**! Yes, it's easy to jump directly to the original function (thus achieving the capability (1) of the list above). But for (2), (3), and (5) your hook needs to *gain control back after return* from the target function -- which is trivial with the knowledge of target function prototypes, and quite challenging without.
+
+	Not to state the obvious, but to encode prototypes for *all* the library calls in a process is nearly impossible -- there could be hundreds of different API calls, and many of those may be undocumented.
 
 The ``protolesshooks`` library provides return-hijacking thunks which work *without* the knowledge of target functions prototypes. This makes it possible, for example, to enumerare and intercept *all shared libraries* in a process, gain a bird's-eye overview of the API call-graph, then gradually add prototype information for parameter/retval decoding as necessary.
 
@@ -35,15 +38,33 @@ The ``protolesshooks`` library provides return-hijacking thunks which work *with
 Features
 --------
 
+* Works with no or with partial information about target function prototypes;
 * Function entry hooks;
 * Function exit hooks;
-* SEH-exception hooks (Windows x64 only).
+* SEH-exception hooks (Windows x64 only);
+* Arguments can be modified before jumping to the target function;
+* Retvals can be modified before returning to the caller;
+* The target function can be blocked if necessary;
+* Thunks can be used with trampoline-based hooking engines, too.
 
 Supported calling conventions:
 
 * Microsoft x64 (MSVC);
 * SystemV AMD64 (GCC/Clang);
-* x86 cdecl & stdcall (MSVC, GCC/Clang).
+* x86 cdecl (MSVC, GCC/Clang);
+* x86 stdcall (MSVC, GCC/Clang);
+* x86 __thiscall (MSVC);
+* x86 __fastcall (MSVC);
+* x86 __attribute__((regparm(n)) (GCC/Clang).
+
+Built-in enumerators for import tables:
+
+* PE (Windows)
+* ELF (Linux)
+* Mach-O (macOS)
+
+SEH x64 Note
+~~~~~~~~~~~~
 
 On Windows x64 thunks properly dispatch exceptions to lower SEH handlers, without losing the hook after the first exception. This is important, because multiple exceptions can occur without unwinding (if one of the SEH filters returns ``EXCEPTION_CONTINUE_EXECUTION``), for example:
 
@@ -78,3 +99,29 @@ On Windows x64 thunks properly dispatch exceptions to lower SEH handlers, withou
 		}
 	}
 
+Samples
+-------
+
+* `sample_00_trivial <https://github.com/vovkos/protolesshooks/blob/master/samples/sample_00_trivial.cpp>`__
+
+	The hello-world sample. Allocates a enter/leave hook for a simple function and calls it directly.
+
+* `sample_01_params <https://github.com/vovkos/protolesshooks/blob/master/samples/sample_01_params.cpp>`__
+
+	Demonstrates how to decode register and stack arguments and return values.
+
+* `sample_02_enum <https://github.com/vovkos/protolesshooks/blob/master/samples/sample_02_enum.cpp>`__
+
+	Demonstrates how to enumerate all loaded modules and imports for each module.
+
+* `sample_03_global <https://github.com/vovkos/protolesshooks/blob/master/samples/sample_03_global.cpp>`__
+
+	Demonstrates the global interception of all imports in all loaded modules.
+
+* `sample_04_modify <https://github.com/vovkos/protolesshooks/blob/master/samples/sample_04_modify.cpp>`__
+
+	Demonstrates how to modify arguments and return.
+
+* `sample_05_block <https://github.com/vovkos/protolesshooks/blob/master/samples/sample_05_block.cpp>`__
+
+	Demonstrates how to pass-through, proxy-call, or completely block the target function.
