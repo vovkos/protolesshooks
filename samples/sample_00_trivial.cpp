@@ -53,7 +53,7 @@ fooHookLeave(
 int
 main()
 {
-	typedef int FooFunc();
+	typedef void FooFunc();
 
 	plh::HookArena arena;
 	plh::Hook* fooHook = arena.allocate((void*)foo, (void*)0xabcdef, fooHookEnter, fooHookLeave);

@@ -154,11 +154,10 @@ fooHookLeave(
 #endif
 
 	printf(
-		"fooHookLeave(func: %p, param: %p, frame: %p, retval: %d/0x%x)\n",
+		"fooHookLeave(func: %p, param: %p, frame: %p)\n  -> %d\n",
 		targetFunc,
 		callbackParam,
 		(void*)frameBase,
-		returnValue,
 		returnValue
 		);
 }
