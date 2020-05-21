@@ -31,14 +31,14 @@ The problem here, however, is that you **can't proxy-call without target functio
 
 	Not to state the obvious, but to encode prototypes for *all* the library calls in a process is nearly impossible -- there could be hundreds of different API calls, and many of those may be undocumented.
 
-The ``protolesshooks`` library provides return-hijacking thunks that work *without* the knowledge of target functions prototypes. This makes it possible, for example, to enumerare and intercept *all shared libraries* in a process, gain a birds-eye overview of the API call-graph, then gradually add prototype information for parameter/retval decoding as necessary.
+The ``protolesshooks`` library provides return-hijacking thunks that work *without* the knowledge of target functions prototypes. This makes it possible, for example, to enumerate and intercept *all shared libraries* in a process, gain a birds-eye overview of the API call-graph, then gradually add prototype information for parameter/retval decoding as necessary.
 
-	A point worth mentioning is that with the presented method, the prototype information can be incomplete. For instance, we may have some clues about the first two parameters of a particular function, but no idea about the rest. With the traditional hooking (when your hook is inserted into the call chain), it's just not going to work -- you need *exact information* about the expected stack frame! With ``protolesshooks`` it's absolutely fine.
+	The prototype information can be incomplete. For instance, we may have some clues about the first two parameters of a particular function, but no idea about the rest. With the traditional hooking (when your hook is inserted into the call chain), it's just not going to work -- you need *exact information* about the expected stack frame! With ``protolesshooks`` it's absolutely fine.
 
 Features
 --------
 
-* Works without (or with partial) information about target function prototypes;
+* Works without information about target function prototypes;
 * Function entry hooks;
 * Function exit hooks;
 * SEH-exception hooks (Windows x64 only);
@@ -108,7 +108,7 @@ Samples
 
 * `sample_01_params <https://github.com/vovkos/protolesshooks/blob/master/samples/sample_01_params.cpp>`__
 
-	Demonstrates how to decode register and stack arguments and return values.
+	Demonstrates how to decode register/stack arguments and return values.
 
 * `sample_02_enum <https://github.com/vovkos/protolesshooks/blob/master/samples/sample_02_enum.cpp>`__
 
@@ -116,11 +116,11 @@ Samples
 
 * `sample_03_global <https://github.com/vovkos/protolesshooks/blob/master/samples/sample_03_global.cpp>`__
 
-	Demonstrates the global interception of all imports in all loaded modules.
+	The global interception of all imports in all loaded modules.
 
 * `sample_04_modify <https://github.com/vovkos/protolesshooks/blob/master/samples/sample_04_modify.cpp>`__
 
-	Demonstrates how to modify arguments and return.
+	Demonstrates how to modify register/stack arguments and return values.
 
 * `sample_05_block <https://github.com/vovkos/protolesshooks/blob/master/samples/sample_05_block.cpp>`__
 
