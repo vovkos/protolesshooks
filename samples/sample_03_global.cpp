@@ -131,13 +131,7 @@ spyModule(
 	if (!result)
 		return false;
 
-	static int32_t stringCacheFlag = 0;
-	static int32_t hookArenaFlag = 0;
-
 	plh::ImportIterator it = plh::enumerateImports(moduleIt);
-
-	char const* currentModuleName = NULL;
-
 	for (; it; it++)
 	{
 		stringCache->emplace_back();
