@@ -9,7 +9,7 @@ Prototypeless Hooks
 Abstract
 --------
 
-The ``protolesshooks`` library provides a hooking engine which works *without* information about *target functions prototypes*.
+The ``protolesshooks`` library provides a **hooking engine** that works **without information on target functions prototypes**.
 
 This code is intended for use in the upcoming **API Spy** plugin for `IO Ninja <https://ioninja.com>`__; API Spy is going to be an advanced cross-platform alternative for ``ltrace``.
 
@@ -27,18 +27,18 @@ The idea of **API hooking** is to intercept calls to system or 3rd-party librari
 
 Most hooking-related libraries, frameworks, and articles focus on *injection techniques*, i.e., the details of making your hook getting called every time before the original function. Once this task is accomplished, the problem is deemed to be solved -- your hook can now *proxy-call* the original function, pass its return value back to the caller, and perform logging/argument/retval modification as necessary.
 
-The problem here, however, is that without *target function prototypes* you **can't proxy-call**! Yes, it's easy to jump directly to the original function (thus achieving the capability (1) of the list above). But for (2), (3), and (5) your hook needs to *gain control back after return* from the target function -- which is trivial with the knowledge of target function prototypes, and quite challenging without.
+The problem here, however, is that you **can't proxy-call without target function prototypes**! Yes, it's easy to jump directly to the original function (thus getting the capability (1) of the list above). But for (2), (3), and (5) your hook needs to *regain control after return* from the target function -- which is trivial with the knowledge of target function prototypes, and quite challenging without.
 
 	Not to state the obvious, but to encode prototypes for *all* the library calls in a process is nearly impossible -- there could be hundreds of different API calls, and many of those may be undocumented.
 
-The ``protolesshooks`` library provides return-hijacking thunks which work *without* the knowledge of target functions prototypes. This makes it possible, for example, to enumerare and intercept *all shared libraries* in a process, gain a bird's-eye overview of the API call-graph, then gradually add prototype information for parameter/retval decoding as necessary.
+The ``protolesshooks`` library provides return-hijacking thunks that work *without* the knowledge of target functions prototypes. This makes it possible, for example, to enumerare and intercept *all shared libraries* in a process, gain a birds-eye overview of the API call-graph, then gradually add prototype information for parameter/retval decoding as necessary.
 
 	A point worth mentioning is that with the presented method, the prototype information can be incomplete. For instance, we may have some clues about the first two parameters of a particular function, but no idea about the rest. With the traditional hooking (when your hook is inserted into the call chain), it's just not going to work -- you need *exact information* about the expected stack frame! With ``protolesshooks`` it's absolutely fine.
 
 Features
 --------
 
-* Works with no or with partial information about target function prototypes;
+* Works without (or with partial) information about target function prototypes;
 * Function entry hooks;
 * Function exit hooks;
 * SEH-exception hooks (Windows x64 only);
@@ -49,12 +49,12 @@ Features
 
 Supported calling conventions:
 
-* Microsoft x64 (MSVC);
+* Microsoft x64 (MSC);
 * SystemV AMD64 (GCC/Clang);
-* x86 cdecl (MSVC, GCC/Clang);
-* x86 stdcall (MSVC, GCC/Clang);
-* x86 __thiscall (MSVC);
-* x86 __fastcall (MSVC);
+* x86 cdecl (MSC, GCC/Clang);
+* x86 stdcall (MSC, GCC/Clang);
+* x86 __thiscall (MSC);
+* x86 __fastcall (MSC);
 * x86 __attribute__((regparm(n)) (GCC/Clang).
 
 Built-in enumerators for import tables:
@@ -66,7 +66,7 @@ Built-in enumerators for import tables:
 SEH x64 Note
 ~~~~~~~~~~~~
 
-On Windows x64 thunks properly dispatch exceptions to lower SEH handlers, without losing the hook after the first exception. This is important, because multiple exceptions can occur without unwinding (if one of the SEH filters returns ``EXCEPTION_CONTINUE_EXECUTION``), for example:
+On Windows x64, thunks properly dispatch exceptions to lower SEH handlers without losing the hook after the first exception. This is important because multiple exceptions can occur without unwinding (if one of the SEH filters returns ``EXCEPTION_CONTINUE_EXECUTION``), for example:
 
 .. code-block:: cpp
 
@@ -104,7 +104,7 @@ Samples
 
 * `sample_00_trivial <https://github.com/vovkos/protolesshooks/blob/master/samples/sample_00_trivial.cpp>`__
 
-	The hello-world sample. Allocates a enter/leave hook for a simple function and calls it directly.
+	The hello-world sample. Allocates a basic enter/leave hook for a void function with no arguments; then calls it directly.
 
 * `sample_01_params <https://github.com/vovkos/protolesshooks/blob/master/samples/sample_01_params.cpp>`__
 
