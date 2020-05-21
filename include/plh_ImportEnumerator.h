@@ -8,14 +8,14 @@
 #	include <map>
 #elif (_PLH_OS_LINUX)
 #	if (_PLH_CPU_X86)
-#	    define ELF_R_TYPE    ELF32_R_TYPE
-#	    define ELF_R_SYM     ELF32_R_SYM
-#	    define ELF_ST_TYPE   ELF32_ST_TYPE
-#	    define ELF_ST_BIND   ELF32_ST_BIND
+#		define ELF_R_TYPE    ELF32_R_TYPE
+#		define ELF_R_SYM     ELF32_R_SYM
+#		define ELF_ST_TYPE   ELF32_ST_TYPE
+#		define ELF_ST_BIND   ELF32_ST_BIND
 
-#       define DT_GOT_REL    DT_REL
-#       define DT_GOT_RELSZ  DT_RELSZ
-#       define DT_GOT_RELENT DT_RELENT
+#		define DT_GOT_REL    DT_REL
+#		define DT_GOT_RELSZ  DT_RELSZ
+#		define DT_GOT_RELENT DT_RELENT
 
 #		define R_GLOB_DAT     R_386_GLOB_DAT
 #		define R_JUMP_SLOT    R_386_JMP_SLOT
@@ -23,34 +23,34 @@
 typedef ElfW(Rel) ElfRel;
 
 #	elif (_PLH_CPU_AMD64)
-#	    define ELF_R_TYPE    ELF64_R_TYPE
-#	    define ELF_R_SYM     ELF64_R_SYM
-#	    define ELF_ST_TYPE   ELF64_ST_TYPE
-#	    define ELF_ST_BIND   ELF64_ST_BIND
+#		define ELF_R_TYPE    ELF64_R_TYPE
+#		define ELF_R_SYM     ELF64_R_SYM
+#		define ELF_ST_TYPE   ELF64_ST_TYPE
+#		define ELF_ST_BIND   ELF64_ST_BIND
 
-#       define DT_GOT_REL    DT_RELA
-#       define DT_GOT_RELSZ  DT_RELASZ
-#       define DT_GOT_RELENT DT_RELAENT
+#		define DT_GOT_REL    DT_RELA
+#		define DT_GOT_RELSZ  DT_RELASZ
+#		define DT_GOT_RELENT DT_RELAENT
 
-#       define R_GLOB_DAT    R_X86_64_GLOB_DAT
-#       define R_JUMP_SLOT   R_X86_64_JUMP_SLOT
+#		define R_GLOB_DAT    R_X86_64_GLOB_DAT
+#		define R_JUMP_SLOT   R_X86_64_JUMP_SLOT
 
 typedef ElfW(Rela) ElfRel;
 
 #	elif (_PLH_CPU_ARM32)
-#	    define ELF_R_TYPE    ELF32_R_TYPE
-#	    define ELF_R_SYM     ELF32_R_SYM
-#	    define ELF_ST_TYPE   ELF32_ST_TYPE
-#	    define ELF_ST_BIND   ELF32_ST_BIND
+#		define ELF_R_TYPE    ELF32_R_TYPE
+#		define ELF_R_SYM     ELF32_R_SYM
+#		define ELF_ST_TYPE   ELF32_ST_TYPE
+#		define ELF_ST_BIND   ELF32_ST_BIND
 
-#       define DT_GOT_REL    DT_REL
-#       define DT_GOT_RELSZ  DT_RELSZ
-#       define DT_GOT_RELENT DT_RELENT
+#		define DT_GOT_REL    DT_REL
+#		define DT_GOT_RELSZ  DT_RELSZ
+#		define DT_GOT_RELENT DT_RELENT
 
-#       define R_GLOB_DAT    R_ARM_GLOB_DAT
-#       define R_JUMP_SLOT   R_ARM_JUMP_SLOT
+#		define R_GLOB_DAT    R_ARM_GLOB_DAT
+#		define R_JUMP_SLOT   R_ARM_JUMP_SLOT
 
-	typedef ElfW(Rel) ElfRel;
+typedef ElfW(Rel) ElfRel;
 
 #	endif
 #elif (_PLH_OS_DARWIN)
