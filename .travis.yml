@@ -36,5 +36,4 @@ script:
     - cd build
     - cmake .. -DTARGET_CPU=$TARGET_CPU -DCMAKE_BUILD_TYPE=$CONFIGURATION -DCMAKE_CXX_FLAGS=-std=c++11
     - make
-    - samples/sample_03_global
     - ctest --output-on-failure
