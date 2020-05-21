@@ -1,9 +1,10 @@
 #pragma once
 
 #include "plh_Os.h"
-#include <vector>
 
 #if (_PLH_OS_WIN)
+#	include <memory>
+#	include <vector>
 #	include <windows.h>
 #elif (_PLH_OS_LINUX)
 #	include <link.h>
@@ -19,7 +20,7 @@ class ModuleIterator
 {
 protected:
 	mutable std::string m_moduleFileName;
-	std::vector<HMODULE> m_moduleArray;
+	std::shared_ptr<std::vector<HMODULE> > m_moduleArray;
 	size_t m_index;
 
 public:
@@ -28,11 +29,11 @@ public:
 		m_index = -1;
 	}
 
-	ModuleIterator(std::vector<HMODULE>&& moduleArray);
+	ModuleIterator(std::shared_ptr<std::vector<HMODULE> >&& moduleArray);
 
 	operator bool () const
 	{
-		return m_index < m_moduleArray.size();
+		return m_moduleArray && m_index < m_moduleArray->size();
 	}
 
     ModuleIterator&
@@ -44,7 +45,7 @@ public:
 	void*
 	getModule() const
 	{
-		return m_index < m_moduleArray.size() ? m_moduleArray[m_index] : NULL;
+		return m_moduleArray && m_index < m_moduleArray->size() ? m_moduleArray->at(m_index) : NULL;
 	}
 
 	const char*

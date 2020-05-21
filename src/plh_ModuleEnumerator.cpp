@@ -1,8 +1,8 @@
 #include "plh_ModuleEnumerator.h"
-#include <codecvt>
 #include <assert.h>
 
 #if (_PLH_OS_WIN)
+#	include <codecvt>
 #	include <psapi.h>
 #elif (_PLH_OS_LINUX)
 #	include <linux/limits.h>
@@ -16,7 +16,7 @@ namespace plh {
 
 #if (_PLH_OS_WIN)
 
-ModuleIterator::ModuleIterator(std::vector<HMODULE>&& moduleArray)
+ModuleIterator::ModuleIterator(std::shared_ptr<std::vector<HMODULE> >&& moduleArray)
 {
 	m_moduleArray = moduleArray;
 	m_index = 0;
@@ -25,7 +25,7 @@ ModuleIterator::ModuleIterator(std::vector<HMODULE>&& moduleArray)
 ModuleIterator&
 ModuleIterator::operator ++ ()
 {
-	if (m_index >= m_moduleArray.size())
+	if (!m_moduleArray || m_index >= m_moduleArray->size())
 		return *this;
 
 	m_index++;
@@ -38,7 +38,7 @@ ModuleIterator::prepareModuleFileName() const
 {
 	assert(!m_moduleFileName.length());
 
-	if (m_index >= m_moduleArray.size())
+	if (!m_moduleArray || m_index >= m_moduleArray->size())
 		return NULL;
 
 	enum
@@ -46,9 +46,10 @@ ModuleIterator::prepareModuleFileName() const
 		BuferLength = 1024,
 	};
 
+	HMODULE module = m_moduleArray->at(m_index);
 	wchar_t fileName[BuferLength];
 	fileName[BuferLength - 1] = 0;
-	::GetModuleFileNameW(m_moduleArray[m_index], fileName, BuferLength - 1);
+	::GetModuleFileNameW(module, fileName, BuferLength - 1);
 
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
 	m_moduleFileName = convert.to_bytes(fileName);
@@ -60,16 +61,16 @@ ModuleIterator::prepareModuleFileName() const
 bool
 enumerateModules(ModuleIterator* iterator)
 {
-	std::vector<HMODULE> moduleArray;
+	std::shared_ptr<std::vector<HMODULE> > moduleArray = std::make_shared<std::vector<HMODULE> >();
 
 	for (;;)
 	{
-		size_t currentCount = moduleArray.size();
+		size_t currentCount = moduleArray->size();
 		DWORD requiredSize;
 
 		::EnumProcessModules(
 			::GetCurrentProcess(),
-			moduleArray.data(),
+			moduleArray->data(),
 			(DWORD)currentCount * sizeof(HMODULE),
 			&requiredSize
 			);
@@ -78,7 +79,7 @@ enumerateModules(ModuleIterator* iterator)
 		if (requiredCount <= currentCount)
 			break;
 
-		moduleArray.resize(requiredCount);
+		moduleArray->resize(requiredCount);
 	}
 
 	*iterator = ModuleIterator(std::move(moduleArray));
