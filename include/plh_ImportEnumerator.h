@@ -54,7 +54,9 @@ typedef ElfW(Rela) ElfRel;
 
 #	endif
 #elif (_PLH_OS_DARWIN)
+#	include <vector>
 #	include <mach-o/dyld.h>
+#	include <mach-o/loader.h>
 #endif
 
 namespace plh {

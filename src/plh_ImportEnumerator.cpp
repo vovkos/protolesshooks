@@ -6,7 +6,6 @@
 #	include <psapi.h>
 #elif (_PLH_OS_DARWIN)
 #	include "plh_Leb128.h"
-#	include <mach-o/loader.h>
 #endif
 
 namespace plh {
