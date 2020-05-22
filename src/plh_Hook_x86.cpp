@@ -137,7 +137,7 @@ HookArena::allocate(
 	void* callbackParam,
 	HookEnterFunc* enterFunc,
 	HookLeaveFunc* leaveFunc
-)
+	)
 {
 	Hook* hook = ((ExecutableBlockArena<Hook>*)m_impl)->allocate();
 	if (!hook)
@@ -171,7 +171,7 @@ void
 setHookTargetFunc(
 	Hook* hook,
 	void* targetFunc
-)
+	)
 {
 	setCallJmpRel32Target(hook->m_thunkCode, ThunkCodeOffset_JmpTargetFunc, (void*)targetFunc);
 }

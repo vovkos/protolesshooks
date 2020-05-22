@@ -1,9 +1,6 @@
 #include "plh_Hook.h"
 #include <stdio.h>
 
-#undef NDEBUG
-#include <assert.h>
-
 //..............................................................................
 
 // target function

@@ -23,11 +23,7 @@ main()
 #elif (_PLH_OS_LINUX)
 			printf("  %s\n", importIt.getSymbolName());
 #elif (_PLH_OS_DARWIN)
-			printf(
-				"  %s:%s...\n",
-				importIt.getModuleName(),
-				importIt.getSymbolName()
-				);
+			printf("  %s:%s...\n", importIt.getModuleName(), importIt.getSymbolName());
 #endif
 		}
 	}
