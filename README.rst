@@ -1,6 +1,10 @@
 Prototypeless Hooks
 ===================
 
+.. image:: https://api.codacy.com/project/badge/Grade/0d32e61c97f94e79bb595d4e7e9982b9
+   :alt: Codacy Badge
+   :target: https://app.codacy.com/manual/vovkos/protolesshooks?utm_source=github.com&utm_medium=referral&utm_content=vovkos/protolesshooks&utm_campaign=Badge_Grade_Dashboard
+
 .. image:: https://travis-ci.org/vovkos/protolesshooks.svg?branch=master
 	:target: https://travis-ci.org/vovkos/protolesshooks
 .. image:: https://ci.appveyor.com/api/projects/status/enh19e87fmxhqurc?svg=true
